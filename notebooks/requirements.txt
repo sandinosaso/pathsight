@@ -1,0 +1,17 @@
+# Notebook-only dependencies.
+# Install both before launching Jupyter:
+#
+#   pip install -r requirements.txt
+#   pip install -r notebooks/requirements.txt
+
+
+# Jupyter environment
+jupyter>=1.0.0
+ipykernel>=6.29.0
+ipywidgets>=8.1.0       # interactive widgets (e.g. progress sliders)
+
+# Notebook-friendly display helpers
+tqdm>=4.66.0            # progress bars in loops
+jinja2>=3.1.0           # required by pandas .style (colour-coded tables in 11_benchmark_comparison)
+
+matplotlib>=3.8.0

@@ -62,7 +62,7 @@ artifacts/predictions/*
 *.vscode
 
 # Raw data
-raw_data/
+artifacts/
 *.csv
 *.sqlite
 *.zip
