@@ -1,4 +1,4 @@
-# The model package and its dependencies
+# Project's Packages
 tensorflow>=2.16.1,<2.19
 tensorflow-metal>=1.1.0; sys_platform == "darwin"
 keras>=3.12.0
