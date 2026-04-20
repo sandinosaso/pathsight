@@ -37,32 +37,24 @@ pyenv virtualenv 3.10.6 pathsight
 pyenv activate pathsight      # or: pyenv shell pathsight
 ```
 
-### 2. Install core dependencies
+### 2. Install dependencies
+
+| Command | What it does |
+|---|---|
+| `make install` | Core model deps only — clean-syncs and removes any stale packages |
+| `make install-notebooks` | Core deps first, then adds Jupyter notebook deps |
+| `make install-all` | Everything in one shot (core + notebooks) |
 
 ```bash
-# Option A — Make (recommended)
-make install
-
-# Option B — pip directly
-pip install -r requirements.txt
+make install          # model/training work only
+make install-all      # if you also want to run notebooks
 ```
 
 > **Apple Silicon (M-series) note:** `tensorflow-metal` is installed automatically on macOS ARM64 to enable GPU acceleration via Metal. It is skipped on Intel Macs and other platforms.
 
-### 3. Install notebook dependencies (Jupyter only)
-
-Only needed if you want to run the notebooks interactively:
-
-```bash
-# Option A — Make (recommended)
-make install-notebooks
-
-# Option B — pip directly
-pip install -r notebooks/requirements.txt
-```
+> **Note:** All install commands use `pip-sync` under the hood, which removes any packages not listed in the requirements files — keeping the env clean and reproducible.
 
 ---
-
 ## Running the notebooks
 
 ```bash
