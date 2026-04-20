@@ -4,7 +4,6 @@
 #   pip install -r requirements.txt
 #   pip install -r notebooks/requirements.txt
 
-
 # Jupyter environment
 jupyter>=1.0.0
 ipykernel>=6.29.0
