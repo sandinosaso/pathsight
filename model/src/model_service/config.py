@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+import ast
 
 from dotenv import load_dotenv
 
@@ -35,6 +36,9 @@ def _env_int(key: str, default: int) -> int:
 def _env_float(key: str, default: float) -> float:
     return float(_env(key, str(default)))
 
+def _env_list(key: str, default: list) -> list:
+    return ast.literal_eval(_env(key, str(default)))
+
 
 def _repo_root() -> Path:
     """Monorepo root (``pathsight/``), or override with ``PATHSIGHT_ROOT``."""
@@ -47,7 +51,8 @@ def _repo_root() -> Path:
 
 @dataclass
 class DataConfig:
-    image_size: int = field(default_factory=lambda: _env_int("PCAM_IMAGE_SIZE", 224))
+    image_size: int = field(default_factory=lambda: _env_int("PCAM_IMAGE_SIZE", 96))
+    input_shape: list = field(default_factory=lambda: _env_list("PCAM_INPUT_SHAPE", "[96,96,3]"))
     batch_size: int = field(default_factory=lambda: _env_int("PCAM_BATCH_SIZE", 32))
     seed: int = field(default_factory=lambda: _env_int("PCAM_SEED", 42))
     shuffle_buffer: int = 4096
