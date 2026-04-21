@@ -17,6 +17,7 @@ install-all:
 	pip-sync requirements.txt notebooks/requirements.txt
 	pip install -r requirements.txt
 	pip install -r notebooks/requirements.txt
+	pip install -e model
 
 ## Run the test suite
 test:
