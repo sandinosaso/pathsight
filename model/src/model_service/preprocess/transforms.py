@@ -13,13 +13,6 @@ def to_float01(image: tf.Tensor) -> tf.Tensor:
     return tf.cast(image, tf.float32) / 255.0
 
 
-def efficientnet_preprocess(image: tf.Tensor) -> tf.Tensor:
-    """ImageNet preprocessing for EfficientNet (expects float32 [0,1] input)."""
-    from tensorflow.keras.applications.efficientnet import preprocess_input
-
-    return preprocess_input(image * 255.0)
-
-
 def preprocess_for(mode: str, image: tf.Tensor) -> tf.Tensor:
     """Apply backbone-family preprocessing to a float32 [0,1] image tensor.
 
