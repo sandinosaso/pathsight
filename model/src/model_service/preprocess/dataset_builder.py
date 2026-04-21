@@ -6,9 +6,9 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 
 from model_service.config import ModelServiceConfig
-from model_service.preprocess.augmentations import augment_pair
 from model_service.preprocess.tfds_pcam_loader import load_pcam_splits
-from model_service.preprocess.transforms import apply_resize_normalize, preprocess_for
+from model_service.preprocess.augmentations import augment_pair
+from model_service.preprocess.transforms import apply_resize_normalize
 
 
 def _preprocess_image(
@@ -17,31 +17,16 @@ def _preprocess_image(
     *,
     image_size: int,
     augment: bool,
-    preprocess_mode: str = "none",
-    stain_normalise: bool = False,
 ) -> tuple[tf.Tensor, tf.Tensor]:
-    # Step 0 (optional): Macenko stain normalisation runs on the raw uint8
-    # tensor *before* resize/float-cast so the stain decomposition operates
-    # on the original pixel values.
-    # Step 1: resize and cast to float [0, 1]. Backbone preprocessing is
-    # intentionally deferred so augmentation always operates on the [0, 1]
-    # range that augment_pair expects (it clips to [0, 1] at the end).
-    # Calling preprocess_for *before* augmentation would push pixel values
-    # to [0, 255] (or [-1, 1]), causing the final clip to destroy the signal.
     image, label = apply_resize_normalize(
         image,
         label,
-        image_size=image_size,
-        stain_normalise=stain_normalise,
+        image_size=image_size
     )
 
     # Step 2: augment while the image is still in [0, 1].
     if augment:
         image, label = augment_pair(image, label)
-
-    # Step 3: apply backbone-specific preprocessing (scales out of [0,1]).
-    if preprocess_mode and preprocess_mode != "none":
-        image = preprocess_for(preprocess_mode, image)
 
     return image, label
 
@@ -134,8 +119,6 @@ def build_pcam_datasets(
             y,
             image_size=effective_size,
             augment=dc.augment_train,
-            preprocess_mode=effective_mode,
-            stain_normalise=dc.stain_normalise,
         )
 
     def map_eval(x, y):
@@ -143,9 +126,7 @@ def build_pcam_datasets(
             x,
             y,
             image_size=effective_size,
-            augment=False,
-            preprocess_mode=effective_mode,
-            stain_normalise=dc.stain_normalise,
+            augment=False
         )
 
     shuffle_buf = min(dc.shuffle_buffer, max_train_samples) if max_train_samples else dc.shuffle_buffer
