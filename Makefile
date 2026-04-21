@@ -15,6 +15,8 @@ install-all:
 	pip install --quiet pip-tools
 	pip cache purge
 	pip-sync requirements.txt notebooks/requirements.txt
+	pip install -r requirements.txt
+	pip install -r notebooks/requirements.txt
 
 ## Run the test suite
 test:
