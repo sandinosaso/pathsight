@@ -3,12 +3,11 @@ from tensorflow.keras import layers, Model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from model_service.config import ModelServiceConfig
 
-MONITOR = 'val_loss' # val_auc
+MONITOR = 'val_loss' # val_recall
 MODE = 'min' # max
 
-config = ModelServiceConfig()
-
 def default_callbacks():
+    cfg = ModelServiceConfig()
     stopper = EarlyStopping(
         monitor=MONITOR,
         patience=3,
@@ -16,7 +15,7 @@ def default_callbacks():
     )
 
     checkpoint = ModelCheckpoint(
-        filepath=f"{config.paths.artifacts_checkpoints}/baseline_cnn_checkpoint.keras",
+        filepath=str(cfg.paths.artifacts_checkpoints / "baseline_cnn_checkpoint.keras"),
         monitor=MONITOR,
         save_best_only=True,
         mode=MODE
@@ -24,7 +23,12 @@ def default_callbacks():
 
     return [stopper, checkpoint]
 
-def build_baseline_cnn(input_shape=config.data.input_shape, learning_rate=config.train.learning_rate):
+def build_baseline_cnn(input_shape=None, learning_rate=None):
+    cfg = ModelServiceConfig()
+    if input_shape is None:
+        input_shape = cfg.data.input_shape
+    if learning_rate is None:
+        learning_rate = cfg.train.learning_rate
     inputs = layers.Input(shape=input_shape)
     # Layer 1
     x = layers.Conv2D(32, (3, 3), activation='relu')(inputs)
@@ -51,7 +55,11 @@ def build_baseline_cnn(input_shape=config.data.input_shape, learning_rate=config
     )
     return model
 
-def run_training(model: tf.keras.Model, train_ds, val_ds, epochs=config.train.epochs, steps_per_epoch=None, validation_steps_per_epoch=None, callbacks=default_callbacks()):
+def run_training(model: tf.keras.Model, train_ds, val_ds, epochs=None, steps_per_epoch=None, validation_steps_per_epoch=None, callbacks=None):
+    if epochs is None:
+        epochs = ModelServiceConfig().train.epochs
+    if callbacks is None:
+        callbacks = default_callbacks()
 
     history = model.fit(
         train_ds,
