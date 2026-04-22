@@ -14,10 +14,10 @@ import ast
 
 from dotenv import load_dotenv
 
-# Load .env from model/ (one level above src/) or from cwd, whichever exists.
+# Load .env from the project root (pathsight/) or from cwd, whichever exists.
 # Existing env vars take precedence (override=False is the default).
-_model_dir = Path(__file__).resolve().parents[2]  # model/src -> model/
-load_dotenv(_model_dir / ".env")
+_project_root = Path(__file__).resolve().parents[3]  # model/src/model_service -> pathsight/
+load_dotenv(_project_root / ".env")
 load_dotenv()  # also try cwd/.env as a fallback
 
 
@@ -44,7 +44,7 @@ def _repo_root() -> Path:
     """Monorepo root (``pathsight/``), or override with ``PATHSIGHT_ROOT``."""
     env = os.environ.get("PATHSIGHT_ROOT")
     if env:
-        return Path(env).resolve()
+        return Path(env).expanduser().resolve()  # expanduser() handles ~ before resolving
     # model/src/model_service/config.py -> parents[3] == pathsight/
     return Path(__file__).resolve().parents[3]
 
@@ -68,6 +68,7 @@ class PathsConfig:
     artifacts_metrics: Path | None = None
     artifacts_figures: Path | None = None
     artifacts_predictions: Path | None = None
+    artifacts_checkpoints: Path | None = None
     data_dir: Path | None = None
 
     def __post_init__(self) -> None:
@@ -80,6 +81,8 @@ class PathsConfig:
             self.artifacts_figures = root / "artifacts" / "figures"
         if self.artifacts_predictions is None:
             self.artifacts_predictions = root / "artifacts" / "predictions"
+        if self.artifacts_checkpoints is None:
+            self.artifacts_checkpoints = root / "artifacts" / "checkpoints"
         if self.data_dir is None:
             self.data_dir = root / "data"
 

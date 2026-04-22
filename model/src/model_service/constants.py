@@ -10,5 +10,3 @@ LABEL_ALIASES = {
     "non_metastatic": "normal",
     "metastatic": "tumor",
 }
-
-TRAINING_CHECKPOINT_PATH = '~/code/sandinosaso/pathsight/artifacts/checkpoints/baseline_cnn_checkpoint.keras'
