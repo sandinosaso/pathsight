@@ -98,7 +98,8 @@ class TrainConfig:
     )
     early_stop_monitor: str = field(default_factory=lambda: _env("PCAM_EARLY_STOP_MONITOR", "val_auc"))
     early_stop_mode: str = field(default_factory=lambda: _env("PCAM_EARLY_STOP_MODE", "max"))
-    metrics: list = field(default_factory=lambda: ["accuracy", "auc", "precision", "recall"])
+    metrics: list = field(default_factory=lambda: _env_list("MODEL_METRICS", "['accuracy', 'auc', 'precision', 'recall']"))
+
 
 
 @dataclass

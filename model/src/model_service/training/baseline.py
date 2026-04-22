@@ -8,9 +8,10 @@ from model_service.config import ModelServiceConfig
 
 
 
-def default_callbacks(timestamp: str):
+def default_callbacks():
     """Creates callbacks using config and a unique timestamp for filenames."""
     config = ModelServiceConfig()
+    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     stopper = EarlyStopping(
         monitor=config.train.early_stop_monitor,
         patience=config.train.early_stopping_patience,
@@ -77,7 +78,7 @@ def run_training(model: tf.keras.Model, train_ds, val_ds):
         epochs=config.train.epochs,
         callbacks=default_callbacks(config, timestamp)
     )
-
+    print(f"✅ Best checkpoint saved as: baseline_{timestamp}.keras")
     return history
 
 def calculate_save_metrics(history):
