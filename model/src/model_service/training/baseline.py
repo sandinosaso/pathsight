@@ -69,6 +69,7 @@ def run_training(model: tf.keras.Model, train_ds, val_ds):
     config = ModelServiceConfig()
 
     # 1. Create unique timestamp for this specific run
+    #TODO: creating global timestamp here is a bit hacky, but it ensures the same timestamp is used for both checkpoint and metrics filename. Refactor to a more elegant solution if time allows.
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
     # 2. Execute training
