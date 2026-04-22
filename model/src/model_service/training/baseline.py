@@ -1,7 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras import layers, Model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from model_service.constants import TRAINING_CHECKPOINT_PATH
 from model_service.config import ModelServiceConfig
 
 MONITOR = 'val_loss' # val_auc
@@ -17,7 +16,7 @@ def default_callbacks():
     )
 
     checkpoint = ModelCheckpoint(
-        filepath=TRAINING_CHECKPOINT_PATH,
+        filepath=f"{config.paths.artifacts_checkpoints}/baseline_cnn_checkpoint.keras",
         monitor=MONITOR,
         save_best_only=True,
         mode=MODE
