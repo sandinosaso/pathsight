@@ -76,7 +76,7 @@ def run_training(model: tf.keras.Model, train_ds, val_ds):
         train_ds,
         validation_data=val_ds,
         epochs=config.train.epochs,
-        callbacks=default_callbacks(config, timestamp)
+        callbacks=default_callbacks()
     )
     print(f"✅ Best checkpoint saved as: baseline_{timestamp}.keras")
     return history
