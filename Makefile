@@ -3,6 +3,7 @@
 api:
 	pip install fastapi uvicorn python-multipart python-dotenv
 run:
+	#TODO: Use port from env.
 	uvicorn backend.src.main:app --reload --port 8080
 
 ## Install core model dependencies (clean-syncs, removes unlisted packages)
