@@ -1,5 +1,10 @@
 .PHONY: install install-notebooks install-all test
 
+api:
+	pip install fastapi uvicorn python-multipart python-dotenv
+run:
+	uvicorn backend.src.main:app --reload --port 8080
+
 ## Install core model dependencies (clean-syncs, removes unlisted packages)
 install:
 	pip install --quiet pip-tools
