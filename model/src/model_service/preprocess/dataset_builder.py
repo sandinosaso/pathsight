@@ -10,7 +10,6 @@ from model_service.preprocess.tfds_pcam_loader import load_pcam_splits
 from model_service.preprocess.augmentations import augment_pair
 from model_service.preprocess.transforms import apply_resize_normalize
 
-config = ModelServiceConfig()
 
 def _preprocess_image(
     image: tf.Tensor,
@@ -88,7 +87,7 @@ def build_pcam_datasets(
         at 1/5 of ``max_train_samples`` each.  Pass ``None`` to use the full
         dataset (~262 k train / 32 k val / 32 k test).
     """
-    dc = config.data
+    dc = ModelServiceConfig().data
     autotune = tf.data.AUTOTUNE
 
     # Resolve effective image size and preprocess mode
