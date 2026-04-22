@@ -10,6 +10,7 @@ from model_service.preprocess.tfds_pcam_loader import load_pcam_splits
 from model_service.preprocess.augmentations import augment_pair
 from model_service.preprocess.transforms import apply_resize_normalize
 
+config = ModelServiceConfig()
 
 def _preprocess_image(
     image: tf.Tensor,
@@ -53,7 +54,6 @@ def _balanced_subset(ds: tf.data.Dataset, n_total: int, seed: int = 42) -> tf.da
 
 
 def build_pcam_datasets(
-    config: ModelServiceConfig | None = None,
     *,
     data_dir: str | None = None,
     download: bool = True,
@@ -68,8 +68,6 @@ def build_pcam_datasets(
 
     Parameters
     ----------
-    config:
-        ``ModelServiceConfig`` instance. Defaults to a fresh one from env vars.
     data_dir:
         Override the TFDS data directory.
     download:
@@ -90,8 +88,6 @@ def build_pcam_datasets(
         at 1/5 of ``max_train_samples`` each.  Pass ``None`` to use the full
         dataset (~262 k train / 32 k val / 32 k test).
     """
-    if config is None:
-        config = ModelServiceConfig()
     dc = config.data
     autotune = tf.data.AUTOTUNE
 
