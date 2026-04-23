@@ -1,4 +1,4 @@
-.PHONY: install install-notebooks install-all test
+.PHONY: install install-notebooks install-all test frontend-install frontend-dev frontend-build
 
 api:
 	pip install fastapi uvicorn python-multipart python-dotenv
@@ -28,3 +28,15 @@ install-all:
 ## Run the test suite
 test:
 	pytest
+
+## Install frontend dependencies
+frontend-install:
+	npm ci --prefix frontend
+
+## Start the frontend Vite dev server (http://localhost:5173)
+frontend-dev: frontend-install
+	npm run dev --prefix frontend
+
+## Build the frontend for production (output: frontend/dist/)
+frontend-build: frontend-install
+	npm run build --prefix frontend
