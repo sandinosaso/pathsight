@@ -18,6 +18,8 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 
+artifacts/
+
 # Data & artifacts (large / local)
 data/raw/*
 !data/raw/.gitkeep
@@ -25,7 +27,6 @@ data/interim/*
 !data/interim/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
-artifacts/models/*
 !artifacts/models/.gitkeep
 artifacts/metrics/*
 !artifacts/metrics/.gitkeep
@@ -33,6 +34,7 @@ artifacts/figures/*
 !artifacts/figures/.gitkeep
 artifacts/predictions/*
 !artifacts/predictions/.gitkeep
+
 
 # Jupyter
 .ipynb_checkpoints/
@@ -62,10 +64,6 @@ artifacts/predictions/*
 *.vscode
 
 # Raw data
-artifacts/
-# But track models subdirectory
-!artifacts/models/
-!artifacts/models/**
 *.csv
 *.sqlite
 *.zip
