@@ -92,5 +92,27 @@ models/
 secrets.toml
 *.json
 
+# Docker generated files to ignore (Reference: Atlassian)
+backend/.vagrant*
+backend/bin
+backend/docker/docker
+backend/.*.swp
+backend/a.out
+backend/*.orig
+backend/build_src
+backend/.flymake*
+backend/.idea
+backend/.DS_Store
+backend/*.test
+backend/bundles/
+backend/vendor/pkg/
+backend/pyenv
+backend/Vagrantfile
+
+# General Docker ignores
+backend/.dockerignore
+backend/__pycache__
+backend/*.pyc
+
 # User defined extras
 # Complete to your desire
