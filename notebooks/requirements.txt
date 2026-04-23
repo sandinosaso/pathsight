@@ -16,4 +16,4 @@ jinja2>=3.1.0           # required by pandas .style (colour-coded tables in 11_b
 matplotlib>=3.8.0
 
 # for confusion matrix visualization
-seaborn
+seaborn>=0.13.2
