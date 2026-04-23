@@ -90,7 +90,18 @@ models/
 .env.yaml
 .credentials
 secrets.toml
-*.json
+service-account*.json
+*-key.json
+
+# Frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/*.local
+.eslintcache
+
+# Firebase
+.firebase/
 
 # User defined extras
 # Complete to your desire
