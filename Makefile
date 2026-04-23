@@ -1,10 +1,18 @@
 .PHONY: install install-notebooks install-all test
 
 api:
+	pip install -r backend/requirements.txt
 	pip install fastapi uvicorn python-multipart python-dotenv
+
+ifneq (,$(wildcard .env))
+  include .env
+  export
+endif
+
+APP_PORT ?= 8080
+
 run:
-	#TODO: Use port from env.
-	uvicorn backend.src.main:app --reload --port 8080
+	uvicorn backend.src.main:app --reload --port $(APP_PORT)
 
 ## Install core model dependencies (clean-syncs, removes unlisted packages)
 install:
