@@ -7,10 +7,24 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import PrecisionRecallDisplay, RocCurveDisplay, precision_recall_curve
+from keras.callbacks import History
 
 
-def plot_history(history, out_path: Path | None = None) -> None:
-    """Plot loss and key metrics from Keras History."""
+def plot_history(history: History, out_path: Path | None = None) -> None:
+    """Plot loss and key metrics from a Keras training run.
+
+    Produces two side-by-side panels: train/val loss and train/val AUC per
+    epoch.  Diverging val curves indicate overfitting.
+
+    Args:
+        history: The ``keras.callbacks.History`` object returned by
+            ``model.fit()``.  Must contain at least the keys ``loss`` and
+            ``val_loss`` inside ``history.history``.  AUC panels are drawn
+            when ``auc`` / ``val_auc`` keys are present.
+        out_path: Optional file path (``Path``) to save the figure as a PNG
+            (150 dpi).  The parent directory is created automatically.
+            When ``None`` the plot is not saved to disk.
+    """
     h = history.history
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
     axes[0].plot(h.get("loss", []), label="train")
@@ -29,6 +43,18 @@ def plot_history(history, out_path: Path | None = None) -> None:
 
 
 def plot_confusion_matrix(cm: np.ndarray, labels: tuple[str, str], out_path: Path | None = None) -> None:
+    """Render a 2×2 confusion matrix as a colour-coded grid.
+
+    Args:
+        cm: Integer confusion matrix of shape ``(2, 2)`` as returned by
+            ``sklearn.metrics.confusion_matrix``.  Row 0 = negative class,
+            row 1 = positive class.
+        labels: A two-element tuple of class name strings used as tick labels,
+            e.g. ``("Normal", "Metastatic")``.
+        out_path: Optional file path (``Path``) to save the figure as a PNG
+            (150 dpi).  The parent directory is created automatically.
+            When ``None`` the plot is not saved to disk.
+    """
     fig, ax = plt.subplots(figsize=(4, 4))
     im = ax.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
     ax.figure.colorbar(im, ax=ax)
@@ -50,6 +76,16 @@ def plot_confusion_matrix(cm: np.ndarray, labels: tuple[str, str], out_path: Pat
 
 
 def plot_roc(y_true: np.ndarray, y_score: np.ndarray, out_path: Path | None = None) -> None:
+    """Plot the ROC curve with AUC annotated in the legend.
+
+    Args:
+        y_true: 1-D integer array of ground-truth binary labels (0 or 1).
+        y_score: 1-D float array of predicted probabilities for the positive
+            class.  Must have the same length as ``y_true``.
+        out_path: Optional file path (``Path``) to save the figure as a PNG
+            (150 dpi).  The parent directory is created automatically.
+            When ``None`` the plot is not saved to disk.
+    """
     fig, ax = plt.subplots(figsize=(4, 4))
     RocCurveDisplay.from_predictions(y_true, y_score, ax=ax)
     plt.tight_layout()
@@ -73,6 +109,19 @@ def plot_pr_curve(
 
     F1 iso-contours (dashed) are drawn at F1 = 0.5, 0.6, 0.7, 0.8, 0.9 so you
     can visually judge how far the model is from each target.
+
+    Args:
+        y_true: 1-D integer array of ground-truth binary labels (0 or 1).
+        y_score: 1-D float array of predicted probabilities for the positive
+            class.  Must have the same length as ``y_true``.
+        best_f1_threshold: Optional float in ``[0, 1]``.  When provided, a red
+            dot is drawn at the precision/recall point closest to this
+            threshold on the curve, with the achieved F1 score in the legend.
+            Compute it beforehand by sweeping thresholds and picking the one
+            that maximises ``sklearn.metrics.f1_score``.
+        out_path: Optional file path (``Path``) to save the figure as a PNG
+            (150 dpi).  The parent directory is created automatically.
+            When ``None`` the plot is not saved to disk.
     """
     y_true = y_true.astype(np.int32).ravel()
     y_score = y_score.astype(np.float32).ravel()
