@@ -18,7 +18,9 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 
-artifacts/
+artifacts/*
+!artifacts/models/
+!artifacts/models/**
 
 # Data & artifacts (large / local)
 data/raw/*
@@ -74,8 +76,6 @@ data/
 
 # Saved models
 *.joblib
-*.h5
-*.keras
 *.pb
 *.tflite
 
