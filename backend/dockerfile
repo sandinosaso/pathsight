@@ -19,10 +19,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code into the container
 COPY backend /app/backend
 
-# Make artifacts directory and copy the model checkpoints into the container
-#TODO: make this more dynamic
-RUN mkdir -p /app/artifacts/checkpoints
-COPY artifacts/checkpoints/baseline_cnn_best.keras /app/backend/baseline_nb.keras
+# Set environment variable for the model path
+COPY artifacts/models/best_model.keras /app/artifacts/models/best_model.keras
+ENV BEST_MODEL_PATH=/app/artifacts/models/best_model.keras
+
 
 # Set PYTHONPATH to /app so it can see the "backend" folder
 ENV PYTHONPATH=/app
