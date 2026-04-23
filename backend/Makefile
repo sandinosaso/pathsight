@@ -8,7 +8,7 @@ IMAGE           = $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/pathsight/paths
 SERVICE         = pathsight-backend
 
 docker_up:
-	docker build -t $(IMAGE) .
+	docker build -t $(IMAGE) -f $(CURDIR)/dockerfile $(CURDIR)/..
 	docker push $(IMAGE)
 	gcloud run deploy $(SERVICE) \
 		--image $(IMAGE) \
