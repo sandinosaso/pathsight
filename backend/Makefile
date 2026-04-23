@@ -15,4 +15,6 @@ docker_up:
 		--region $(GCP_REGION) \
 		--platform managed \
 		--allow-unauthenticated \
+		--memory 4Gi \
+		--cpu 2 \
 		--project $(GCP_PROJECT_ID)
