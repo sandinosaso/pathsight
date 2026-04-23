@@ -39,6 +39,9 @@ def _env_float(key: str, default: float) -> float:
 def _env_list(key: str, default: list) -> list:
     return ast.literal_eval(_env(key, str(default)))
 
+def _env_path(key: str, default: Path) -> Path:
+    return Path(os.environ.get(key, str(default)))
+
 
 def _repo_root() -> Path:
     """Monorepo root (``pathsight/``), or override with ``PATHSIGHT_ROOT``."""
@@ -59,6 +62,10 @@ class DataConfig:
     cache: bool = True  # applies to val/test only (train set is too large to cache in RAM)
     augment_train: bool = field(default_factory=lambda: _env_bool("PCAM_AUGMENT_TRAIN", True))
     stain_normalise: bool = field(default_factory=lambda: _env_bool("PCAM_STAIN_NORMALISE", False))
+    stain_normalise: bool = field(default_factory=lambda: _env_bool("PCAM_STAIN_NORMALISE", False))
+    best_model_path: Path = field(default_factory=lambda: _env_path("BEST_MODEL_PATH", Path("models/best_model.keras")))
+
+
 
 
 @dataclass

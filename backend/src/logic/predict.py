@@ -45,3 +45,18 @@ def predict_logic(model, img_data):
     print(f"✅ Result predicted: {result:.4f}")
 
     return result
+
+
+def predict_logicc(model, img_data: tf.Tensor) -> float:
+    # Step 1: Add batch dimension (1, H, W, C)
+    img_data = tf.expand_dims(img_data, axis=0)
+
+    # Step 2: Predict — verbose=0 suppresses the progress bar
+    prediction = model.predict(img_data, verbose=0)
+
+    # Step 3: Extract single scalar value
+    result = float(prediction[0][0])
+
+    print(f"✅ Result predicted: {result:.4f}")
+
+    return result
