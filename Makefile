@@ -7,10 +7,6 @@ endif
 
 .PHONY: install install-notebooks install-all test api run docker-build-local docker-run-local docker-up frontend-install frontend-dev frontend-build
 
-api:
-	pip install -r backend/requirements.txt
-	pip install fastapi uvicorn python-multipart python-dotenv
-
 ifneq (,$(wildcard .env))
   include .env
   export
@@ -18,8 +14,8 @@ endif
 
 APP_PORT ?= 8080
 
-run:
-	uvicorn backend.src.main:app --reload --port $(APP_PORT)
+run-api-dev:
+	uvicorn backend.src.main:app --reload --reload-dir backend --port $(APP_PORT)
 
 ## Install core model dependencies (clean-syncs, removes unlisted packages)
 install:
@@ -35,8 +31,9 @@ install-notebooks: install
 install-all:
 	pip install --quiet pip-tools
 	pip cache purge
-	pip-sync requirements.txt notebooks/requirements.txt
+	pip-sync requirements.txt notebooks/requirements.txt backend/requirements.txt
 	pip install -r requirements.txt
+	pip install -r backend/requirements.txt
 	pip install -r notebooks/requirements.txt
 	pip install -e model
 

@@ -63,9 +63,7 @@ class DataConfig:
     augment_train: bool = field(default_factory=lambda: _env_bool("PCAM_AUGMENT_TRAIN", True))
     stain_normalise: bool = field(default_factory=lambda: _env_bool("PCAM_STAIN_NORMALISE", False))
     stain_normalise: bool = field(default_factory=lambda: _env_bool("PCAM_STAIN_NORMALISE", False))
-    best_model_path: Path = field(default_factory=lambda: _env_path("BEST_MODEL_PATH", Path("models/best_model.keras")))
-
-
+    best_model_path: Path = field(default_factory=lambda: _env_path("BEST_MODEL_PATH", Path("artifacts/models/best_model.keras")))
 
 
 @dataclass

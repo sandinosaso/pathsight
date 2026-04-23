@@ -1,13 +1,14 @@
 import os
+import tensorflow as tf
 from fastapi import FastAPI, APIRouter, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-# Ensure your logic folder is accessible in the python path
-from backend.src.logic.predict import load_model_trained, predict_logic
-from backend.src.schemas import PredictionMeta, PredictionResponse
+
 from model.src.model_service.preprocess.dataset_builder import _preprocess_image
-import tensorflow as tf
+from model.src.model_service.interpretability.overlays import bytes_to_png_base64
 from model.src.model_service.config import ModelServiceConfig
 from backend.src.logic.postprocessprediction import format_binary_prediction
+from backend.src.logic.predict import load_model_trained, predict_logic
+from backend.src.schemas import PredictionMeta, PredictionResponse
 
 
 config = ModelServiceConfig()
@@ -60,6 +61,9 @@ async def predict(img: UploadFile = File(...)):
     cancer_pc = result_score * 100
     no_cancer_pc = (1.0 - result_score) * 100
 
+    # Step 6: Encode original image as PNG base64
+    original_b64 = bytes_to_png_base64(contents)
+
     return PredictionResponse(
         predicted_label="cancer" if cancer_pc > no_cancer_pc else "no-cancer",
         confidence=format_binary_prediction(result_score).confidence,
@@ -67,12 +71,15 @@ async def predict(img: UploadFile = File(...)):
             "cancer": cancer_pc / 100,
             "no-cancer": no_cancer_pc / 100,
         },
+        heatmap_base64=None,
+        overlay_base64=None,
+        original_base64=original_b64,
         meta=PredictionMeta(
             input_size=config.data.input_shape,
-            model_name=config.data.best_model_path.name
+            model_name=config.data.best_model_path.name,
+            gradcam_layer=None,
         ),
     ).to_dict()
-
 
 
 app.include_router(router)
