@@ -3,8 +3,8 @@
 # Build the backend Docker image and deploy to Cloud Run.
 # Requires GCP_PROJECT_ID and GCP_REGION env vars to be set.
 GCP_PROJECT_ID ?= $(error GCP_PROJECT_ID is not set)
-GCP_REGION     ?= us-central1
-IMAGE           = gcr.io/$(GCP_PROJECT_ID)/pathsight-backend
+GCP_REGION     ?= europe-central2
+IMAGE           = $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/pathsight/pathsight-backend
 SERVICE         = pathsight-backend
 
 docker_up:

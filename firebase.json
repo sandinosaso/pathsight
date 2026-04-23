@@ -7,7 +7,7 @@
         "source": "/api/**",
         "run": {
           "serviceId": "pathsight-backend",
-          "region": "us-central1"
+          "region": "europe-central2"
         }
       },
       {
