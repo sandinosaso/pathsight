@@ -11,7 +11,7 @@ def load_model_trained():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     #TODO: Update the model path if your model is located elsewhere or has a different name
-    model_path = os.path.join(current_dir, "..", "..", "baseline_nb.keras")
+    model_path = os.getenv('BEST_MODEL_PATH')
 
     print('✅ Model_loaded')
 

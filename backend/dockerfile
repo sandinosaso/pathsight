@@ -1,0 +1,31 @@
+# Use an official Python runtime as a parent image
+FROM python:3.10.6-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the requirements file into the container
+COPY backend/requirements.txt requirements.txt
+
+# Install any needed packages specified in requirements.txt
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code into the container
+COPY backend /app/backend
+
+# Set environment variable for the model path
+COPY artifacts/models/best_model.keras /app/artifacts/models/best_model.keras
+ENV BEST_MODEL_PATH=/app/artifacts/models/best_model.keras
+
+
+# Set PYTHONPATH to /app so it can see the "backend" folder
+ENV PYTHONPATH=/app
+
+# Run the application
+CMD ["sh", "-c", "uvicorn backend.src.main:app --host 0.0.0.0 --port $PORT"]
