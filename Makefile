@@ -8,10 +8,18 @@ endif
 .PHONY: install install-notebooks install-all test api run docker-build-local docker-run-local docker-up frontend-install frontend-dev frontend-build
 
 api:
+	pip install -r backend/requirements.txt
 	pip install fastapi uvicorn python-multipart python-dotenv
+
+ifneq (,$(wildcard .env))
+  include .env
+  export
+endif
+
+APP_PORT ?= 8080
+
 run:
-	#TODO: Use port from env.
-	uvicorn backend.src.main:app --reload --port $(DOCKER_LOCAL_PORT)
+	uvicorn backend.src.main:app --reload --port $(APP_PORT)
 
 ## Install core model dependencies (clean-syncs, removes unlisted packages)
 install:
