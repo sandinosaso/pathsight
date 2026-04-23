@@ -5,11 +5,7 @@ ifneq (,$(wildcard ./.env))
     export $(shell sed 's/=.*//' .env)
 endif
 
-.PHONY: install install-notebooks install-all test api run docker-build-local docker-run-local docker-up
-
-api:
-	pip install -r backend/requirements.txt
-	pip install fastapi uvicorn python-multipart python-dotenv
+.PHONY: install install-notebooks install-all test api run docker-build-local docker-run-local docker-up frontend-install frontend-dev frontend-build
 
 ifneq (,$(wildcard .env))
   include .env
@@ -18,8 +14,8 @@ endif
 
 APP_PORT ?= 8080
 
-run:
-	uvicorn backend.src.main:app --reload --port $(APP_PORT)
+run-api-dev:
+	uvicorn backend.src.main:app --reload --reload-dir backend --port $(APP_PORT)
 
 ## Install core model dependencies (clean-syncs, removes unlisted packages)
 install:
@@ -35,14 +31,27 @@ install-notebooks: install
 install-all:
 	pip install --quiet pip-tools
 	pip cache purge
-	pip-sync requirements.txt notebooks/requirements.txt
+	pip-sync requirements.txt notebooks/requirements.txt backend/requirements.txt
 	pip install -r requirements.txt
+	pip install -r backend/requirements.txt
 	pip install -r notebooks/requirements.txt
 	pip install -e model
 
 ## Run the test suite
 test:
 	pytest
+
+## Install frontend dependencies
+frontend-install:
+	npm ci --prefix frontend
+
+## Start the frontend Vite dev server (http://localhost:5173)
+frontend-dev: frontend-install
+	npm run dev --prefix frontend
+
+## Build the frontend for production (output: frontend/dist/)
+frontend-build: frontend-install
+	npm run build --prefix frontend
 
 ## Build the local Docker image
 # We use the root context (.) so Docker can see the /artifacts folder

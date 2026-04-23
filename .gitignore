@@ -90,7 +90,18 @@ data/
 .env.yaml
 .credentials
 secrets.toml
-*.json
+service-account*.json
+*-key.json
+
+# Frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/*.local
+.eslintcache
+
+# Firebase
+.firebase/
 
 # Docker generated files to ignore (Reference: Atlassian)
 backend/.vagrant*
