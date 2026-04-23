@@ -1,19 +1,18 @@
 import keras
 from PIL import Image
 import numpy as np
-import io
 import os
 import tensorflow as tf
+from model.src.model_service.config import ModelServiceConfig
+
 
 def load_model_trained():
 
+    config = ModelServiceConfig()
 
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+    model_path = config.data.best_model_path
 
-    #TODO: Update the model path if your model is located elsewhere or has a different name
-    model_path = os.path.join(current_dir, "..", "..", "baseline_nb.keras")
-
-    print('✅ Model_loaded')
+    print('✅ Model_loaded:', model_path)
 
     # Normalize the path to remove the '..' and make it clean
     model_path = os.path.normpath(model_path)
