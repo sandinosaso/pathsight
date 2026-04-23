@@ -5,7 +5,7 @@ ifneq (,$(wildcard ./.env))
     export $(shell sed 's/=.*//' .env)
 endif
 
-.PHONY: install install-notebooks install-all test api run docker_build_local docker_run_local docker_up
+.PHONY: install install-notebooks install-all test api run docker-build-local docker-run-local docker_up
 
 api:
 	pip install fastapi uvicorn python-multipart python-dotenv
@@ -38,12 +38,12 @@ test:
 
 ## Build the local Docker image
 # We use the root context (.) so Docker can see the /artifacts folder
-docker_build_local:
+docker-build-local:
 	docker build --tag=$(DOCKER_IMAGE_NAME):local -f backend/Dockerfile .
 
 ## Run the local Docker container
 # Maps your .env port to the internal $PORT and passes the .env file in
-docker_run_local:
+docker-run-local:
 	docker run \
 		-e PORT=$(DOCKER_LOCAL_PORT) \
 		-p $(DOCKER_LOCAL_PORT):$(DOCKER_LOCAL_PORT) \
@@ -51,4 +51,4 @@ docker_run_local:
 		$(DOCKER_IMAGE_NAME):local
 
 ## Build and Run in one single command
-docker_up: docker_build_local docker_run_local
+docker-up: docker-build-local docker-run-local
