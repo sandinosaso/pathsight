@@ -40,7 +40,7 @@ def _env_list(key: str, default: list) -> list:
     return ast.literal_eval(_env(key, str(default)))
 
 def _env_path(key: str, default: Path) -> Path:
-    return Path(os.environ.get(key, str(default)))
+    return Path(os.environ.get(key, str(default))).expanduser().resolve()
 
 
 def _repo_root() -> Path:

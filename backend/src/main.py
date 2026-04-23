@@ -1,11 +1,11 @@
 from fastapi import FastAPI, UploadFile, File
 # Ensure your logic folder is accessible in the python path
-from backend.src.logic.predict import load_model_trained, preprocess_image, predict_logic, predict_logicc
+from backend.src.logic.predict import load_model_trained, predict_logic
 from backend.src.schemas import PredictionMeta, PredictionResponse
 from model.src.model_service.preprocess.dataset_builder import _preprocess_image
-from model.src.model_service.preprocess.dataset_builder import build_pcam_datasets
 import tensorflow as tf
 from model.src.model_service.config import ModelServiceConfig
+from backend.src.logic.postprocessprediction import format_binary_prediction
 
 
 config = ModelServiceConfig()
@@ -34,12 +34,12 @@ async def predict(img: UploadFile = File(...)):
     image, _ = _preprocess_image(
         image,
         tf.constant(0),  # dummy label, not needed for inference
-        image_size=96,
+        image_size=config.data.image_size,
         augment=False,   # never augment at inference time
     )
 
     # Step 4: Run inference
-    result_score = predict_logicc(model=MODEL, img_data=image)
+    result_score = predict_logic(model=MODEL, img_data=image)
 
     # Step 5: Calculate percentages
     cancer_pc = result_score * 100
@@ -47,7 +47,7 @@ async def predict(img: UploadFile = File(...)):
 
     return PredictionResponse(
         predicted_label="cancer" if cancer_pc > no_cancer_pc else "no-cancer",
-        confidence=max(cancer_pc, no_cancer_pc) / 100,
+        confidence=format_binary_prediction(result_score).confidence,
         probabilities={
             "cancer": cancer_pc / 100,
             "no-cancer": no_cancer_pc / 100,

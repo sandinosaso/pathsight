@@ -5,7 +5,7 @@ ifneq (,$(wildcard ./.env))
     export $(shell sed 's/=.*//' .env)
 endif
 
-.PHONY: install install-notebooks install-all test api run docker-build-local docker-run-local docker_up
+.PHONY: install install-notebooks install-all test api run docker-build-local docker-run-local docker-up
 
 api:
 	pip install -r backend/requirements.txt

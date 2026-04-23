@@ -1,4 +1,3 @@
-import keras
 from PIL import Image
 import numpy as np
 import os
@@ -33,20 +32,8 @@ def preprocess_image(image_bytes: bytes):
     img_array = np.expand_dims(img_array, axis=0) # Add batch dimension
     return img_array
 
-def predict_logic(model, img_data):
-    # verbose=0 stops the [1/1] [========] progress bar in the logs
-    # TODO: Ensure that the output of the model is a single scalar value. If your model outputs a different shape, you may need to adjust this code accordingly.
-    prediction = model.predict(img_data)
 
-    # Extract the single scalar value
-    result = float(prediction[0][0])
-
-    print(f"✅ Result predicted: {result:.4f}")
-
-    return result
-
-
-def predict_logicc(model, img_data: tf.Tensor) -> float:
+def predict_logic(model, img_data: tf.Tensor) -> float:
     # Step 1: Add batch dimension (1, H, W, C)
     img_data = tf.expand_dims(img_data, axis=0)
 
