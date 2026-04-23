@@ -27,5 +27,8 @@ ENV BEST_MODEL_PATH=/app/artifacts/models/best_model.keras
 # Set PYTHONPATH to /app so it can see the "backend" folder
 ENV PYTHONPATH=/app
 
+EXPOSE $DOCKER_LOCAL_PORT
 # Run the application
-CMD ["sh", "-c", "uvicorn backend.src.main:app --host 0.0.0.0 --port $PORT"]
+CMD ["sh", "-c", "uvicorn backend.src.main:app --host 0.0.0.0 --port $APP_PORT"]
+
+
