@@ -91,19 +91,3 @@ Once the server is running, explore the interactive documentation at:
   }
 }
 ```
-
----
-
-## 🛠 Maintenance Commands
-
-| Command | Action |
-| :--- | :--- |
-| `make test` | Run the `pytest` suite. |
-| `make frontend-dev` | Start the Vite frontend dev server (if applicable). |
-| `make docker-build-local` | Build the local Docker image manually. |
-| `make install-notebooks` | Setup environment specifically for Jupyter exploration. |
-
----
-
-## 📜 License
-Distributed under the MIT License. See `LICENSE` for more information.
