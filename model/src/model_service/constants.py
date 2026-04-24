@@ -7,6 +7,6 @@ LABEL_NAMES = ("non_metastatic", "metastatic")
 
 # Human-readable aliases for API / UI (align with handoff spec wording)
 LABEL_ALIASES = {
-    "non_metastatic": "normal",
-    "metastatic": "tumor",
+    "non_metastatic": "no-cancer",
+    "metastatic": "cancer",
 }

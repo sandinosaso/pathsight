@@ -13,7 +13,7 @@ export function ViewerControls({ overlayOn, onToggleOverlay, opacity, onOpacity,
   return (
     <div className="flex flex-wrap items-end gap-4 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
       <Button type="button" variant="ghost" onClick={onToggleOverlay}>
-        {overlayOn ? "Hide Grad-CAM" : "Show Grad-CAM"}
+        {overlayOn ? "Hide overlay" : "Show overlay"}
       </Button>
       <Button type="button" variant="ghost" onClick={onResetZoom}>
         Reset zoom
