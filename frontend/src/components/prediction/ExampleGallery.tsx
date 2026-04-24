@@ -16,13 +16,13 @@ export function ExampleGallery({ items, loading, error, onSelect }: Props) {
   return (
     <div>
       <p className="mb-2 text-xs uppercase tracking-wide text-slate-500">Example patches</p>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-4 gap-2">
         {items.map((ex) => (
           <div key={ex.id} className="rounded-lg border border-slate-800 bg-slate-900/40 p-2">
             <img
               src={ex.image_url}
               alt={ex.filename}
-              className="mb-2 h-20 w-full rounded object-cover"
+              className="mb-1 h-16 w-full rounded object-cover"
             />
             <Button
               type="button"

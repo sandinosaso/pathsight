@@ -14,9 +14,6 @@ endif
 
 APP_PORT ?= 8080
 
-run-api-dev:
-	uvicorn backend.src.main:app --reload --reload-dir backend --port $(APP_PORT)
-
 ## Install core model dependencies (clean-syncs, removes unlisted packages)
 install:
 	pip install --quiet pip-tools
@@ -37,13 +34,16 @@ install-all:
 	pip install -r notebooks/requirements.txt
 	pip install -e model
 
+## Install frontend dependencies
+frontend-install:
+	npm ci --prefix frontend
+
 ## Run the test suite
 test:
 	pytest
 
-## Install frontend dependencies
-frontend-install:
-	npm ci --prefix frontend
+run-api-dev:
+	uvicorn backend.src.main:app --reload --reload-dir backend --port $(APP_PORT)
 
 ## Start the frontend Vite dev server (http://localhost:5173)
 frontend-dev: frontend-install

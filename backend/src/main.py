@@ -1,6 +1,8 @@
 import os
+from pathlib import Path
 import tensorflow as tf
-from fastapi import FastAPI, APIRouter, UploadFile, File
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from model.src.model_service.preprocess.dataset_builder import _preprocess_image
@@ -28,10 +30,43 @@ MODEL = load_model_trained()
 
 router = APIRouter(prefix="/api")
 
+EXAMPLES_DIR = Path(__file__).parent / "examples"
+
 
 @app.get("/")
 async def root():
     return {"status": "ok"}
+
+
+@router.get("/examples")
+async def list_examples():
+    items = []
+    for label, folder in [("cancer", "cancer"), ("no-cancer", "no_cancer")]:
+        d = EXAMPLES_DIR / folder
+        if not d.exists():
+            continue
+        for img_path in sorted(d.glob("*.png")):
+            stem = img_path.stem
+            items.append({
+                "id": stem,
+                "filename": img_path.name,
+                "label": label,
+                "description": f"{'Metastatic' if label == 'cancer' else 'Normal'} tissue patch",
+                "image_url": f"/api/examples/{stem}/image",
+            })
+    return {"examples": items}
+
+
+@router.get("/examples/{example_id}/image")
+async def get_example_image(example_id: str):
+    # Prevent path traversal: only allow alphanumeric + underscore
+    if not example_id.replace("_", "").isalnum():
+        raise HTTPException(status_code=400, detail="Invalid example id")
+    for folder in ("cancer", "no_cancer"):
+        candidate = EXAMPLES_DIR / folder / f"{example_id}.png"
+        if candidate.exists():
+            return FileResponse(candidate, media_type="image/png")
+    raise HTTPException(status_code=404, detail="Example not found")
 
 
 @router.post("/predict")

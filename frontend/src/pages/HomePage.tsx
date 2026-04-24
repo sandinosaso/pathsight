@@ -71,13 +71,13 @@ export function HomePage() {
 
   return (
     <Page>
-      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_28rem]">
         <div className="space-y-4">
           <ImageUpload onFile={handleFile} disabled={loading} />
           {loading && (
             <div className="flex items-center gap-3 text-sm text-slate-400">
               <Spinner />
-              Running model + Grad-CAM…
+              Running model…
             </div>
           )}
           {error && <p className="text-sm text-rose-400">{error}</p>}
@@ -87,7 +87,7 @@ export function HomePage() {
             overlayOpacity={opacity}
             overlayVisible={overlayOn}
             onResetRef={(fn) => { resetZoomRef.current = fn; }}
-            className="h-[420px] w-full"
+            className="h-[520px] w-full"
           />
           <ViewerControls
             overlayOn={overlayOn}

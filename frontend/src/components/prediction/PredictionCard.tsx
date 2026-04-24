@@ -12,12 +12,12 @@ export function PredictionCard({ data }: Props) {
       </div>
     );
   }
-  const isTumor = data.predicted_label === "tumor";
+  const isCancer = data.predicted_label === "cancer";
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4">
       <p className="text-xs uppercase tracking-wide text-slate-500">Prediction</p>
-      <p className={`mt-1 text-2xl font-semibold ${isTumor ? "text-rose-300" : "text-emerald-300"}`}>
-        {isTumor ? "Suspicious" : "Not suspicious"}
+      <p className={`mt-1 text-2xl font-semibold ${isCancer ? "text-rose-300" : "text-emerald-300"}`}>
+        {isCancer ? "Suspicious" : "Not suspicious"}
       </p>
       <p className="mt-1 text-sm text-slate-400">
         Display label: <span className="text-slate-200">{data.predicted_label}</span> · Confidence{" "}
