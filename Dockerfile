@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends build-essential
 COPY backend /app/backend
 COPY model /app/model
 
-RUN pip install -e model
+RUN pip install --no-deps -e model
 
 # The model file is fetched from GCS by the CI pipeline (or locally via
 # `python backend/scripts/download_model.py`) before this image is built,
