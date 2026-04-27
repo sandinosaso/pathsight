@@ -26,10 +26,6 @@ COPY backend/scripts/download_model.py /app/scripts/download_model.py
 ENV MODEL_BUCKET_NAME=pathsight-models-wagon-bootcamp-489111
 ENV BEST_MODEL_PATH=/app/artifacts/models/best_model.keras
 
-COPY backend/scripts/download_model.py /app/scripts/download_model.py
-ENV MODEL_BUCKET_NAME=pathsight-models-wagon-bootcamp-489111
-ENV BEST_MODEL_PATH=/app/artifacts/models/best_model.keras
-
 RUN python /app/scripts/download_model.py
 
 # Set PYTHONPATH to /app so it can see the "backend" folder
