@@ -8,7 +8,6 @@ from model_service.config import ModelServiceConfig
 def default_callbacks():
     """Creates callbacks using config and a unique timestamp for filenames."""
     config = ModelServiceConfig()
-    model_name = config.model_name
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     stopper = EarlyStopping(
         monitor=config.train.early_stop_monitor,
@@ -18,7 +17,7 @@ def default_callbacks():
     )
 
     checkpoint = ModelCheckpoint(
-        filepath=config.paths.artifacts_checkpoints / f"{model_name}_{timestamp}.keras",
+        filepath=config.paths.artifacts_checkpoints / f"baseline_{timestamp}.keras",
         monitor=config.train.early_stop_monitor,
         mode=config.train.early_stop_mode,
         save_best_only=True,
@@ -69,7 +68,6 @@ def run_training(model: tf.keras.Model, train_ds, val_ds):
     # 1. Create unique timestamp for this specific run
     #TODO: creating global timestamp here is a bit hacky, but it ensures the same timestamp is used for both checkpoint and metrics filename. Refactor to a more elegant solution if time allows.
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    model_name = config.model_name
 
     # 2. Execute training
     history = model.fit(
@@ -79,5 +77,5 @@ def run_training(model: tf.keras.Model, train_ds, val_ds):
         callbacks=default_callbacks()
     )
 
-    print(f"✅ Best checkpoint saved as: {model_name}_{timestamp}.keras")
+    print(f"✅ Best checkpoint saved as: baseline_{timestamp}.keras")
     return history
