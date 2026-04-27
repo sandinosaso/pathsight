@@ -4,17 +4,17 @@ FROM python:3.12.13-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy the requirements file into the container
 COPY backend/requirements.txt requirements.txt
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python deps. build-essential is required only during pip's source
+# builds; purge it afterwards so it doesn't bloat the final image layer.
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential \
+ && pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt \
+ && apt-get purge -y build-essential \
+ && apt-get autoremove -y \
+ && rm -rf /var/lib/apt/lists/*
 
 # Copy the rest of the application code into the container
 COPY backend /app/backend

@@ -1,0 +1,15 @@
+.git
+.github
+.venv
+__pycache__
+*.pyc
+.DS_Store
+
+frontend
+notebooks
+data
+
+artifacts/*
+!artifacts/models
+artifacts/models/*
+!artifacts/models/best_model.keras

@@ -1,4 +1,11 @@
 import os
+
+# Must be set before TensorFlow is imported anywhere in this process.
+# On Cloud Run (CPU-only) this suppresses the CUDA device probe entirely.
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "-1")
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+
+from contextlib import asynccontextmanager
 from pathlib import Path
 import tensorflow as tf
 from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File
@@ -15,7 +22,20 @@ from backend.src.schemas import PredictionMeta, PredictionResponse
 
 config = ModelServiceConfig()
 
-app = FastAPI()
+MODEL = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Load the model after uvicorn binds the port so Cloud Run's startup
+    probe succeeds before the (slow) Keras load begins."""
+    global MODEL
+    tf.config.set_visible_devices([], "GPU")
+    MODEL = load_model_trained()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 # CORS – safety net; Firebase proxy eliminates cross-origin requests in production
 _cors_origins = os.getenv("CORS_ORIGINS", "https://pathsight.web.app")
@@ -25,8 +45,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-MODEL = load_model_trained()
 
 router = APIRouter(prefix="/api")
 
