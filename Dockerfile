@@ -22,12 +22,13 @@ COPY model /app/model
 
 RUN pip install -e model
 
-COPY backend/scripts/download_model.py /app/scripts/download_model.py
-ENV MODEL_BUCKET_NAME=pathsight-models-wagon-bootcamp-489111
+# The model file is fetched from GCS by the CI pipeline (or locally via
+# `python backend/scripts/download_model.py`) before this image is built,
+# so it is part of the build context and we just COPY it in. We do not
+# download from GCS during `docker build` because the docker build sandbox
+# has no Application Default Credentials.
+COPY artifacts/models/best_model.keras /app/artifacts/models/best_model.keras
 ENV BEST_MODEL_PATH=/app/artifacts/models/best_model.keras
-
-# Download model from GCS at build time
-RUN python /app/scripts/download_model.py
 
 # Set PYTHONPATH to /app so it can see the "backend" folder
 ENV PYTHONPATH=/app

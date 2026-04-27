@@ -28,6 +28,20 @@ jobs:
       - name: Configure Docker for GCR
         run: gcloud auth configure-docker europe-central2-docker.pkg.dev --quiet
 
+      # Cloud Build's `docker build` sandbox has no Application Default
+      # Credentials, so we cannot fetch the model from GCS inside the
+      # Dockerfile. Instead we download it on the runner (which is already
+      # authenticated) and let it be part of the build context that gets
+      # uploaded to Cloud Build.
+      - name: Download model from GCS
+        env:
+          MODEL_BUCKET_NAME: pathsight-models-wagon-bootcamp-489111
+        run: |
+          mkdir -p artifacts/models
+          gcloud storage cp \
+            "gs://${MODEL_BUCKET_NAME}/best_model.keras" \
+            artifacts/models/best_model.keras
+
       - name: Build and deploy backend
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
