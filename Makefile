@@ -56,7 +56,7 @@ frontend-build: frontend-install
 ## Build the local Docker image
 # We use the root context (.) so Docker can see the /artifacts folder
 docker-build-local:
-	docker build --tag=$(DOCKER_IMAGE_NAME):local -f backend/Dockerfile .
+	docker build --tag=$(DOCKER_IMAGE_NAME):local -f Dockerfile .
 
 ## Run the local Docker container
 # Maps your .env port to the internal $PORT and passes the .env file in
