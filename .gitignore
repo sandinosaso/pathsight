@@ -19,7 +19,8 @@ htmlcov/
 .ruff_cache/
 
 artifacts/*
-!artifacts/models/best_model.keras
+!artifacts/models/
+!artifacts/models/**
 
 # Data & artifacts (large / local)
 data/raw/*

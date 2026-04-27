@@ -112,5 +112,5 @@ class ModelServiceConfig:
     data: DataConfig = field(default_factory=DataConfig)
     paths: PathsConfig = field(default_factory=PathsConfig)
     train: TrainConfig = field(default_factory=TrainConfig)
-    model_name: str = field(default_factory=lambda: _env("MODEL_NAME", "baseline"))
+    model_name: str = "efficientnetb0_transfer_v1"
     gradcam_layer_name: str | None = None  # auto-detect if None
