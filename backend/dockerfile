@@ -29,11 +29,8 @@ ENV BEST_MODEL_PATH=/app/artifacts/models/best_model.keras
 COPY backend/scripts/download_model.py /app/scripts/download_model.py
 ENV MODEL_BUCKET_NAME=pathsight-models-wagon-bootcamp-489111
 ENV BEST_MODEL_PATH=/app/artifacts/models/best_model.keras
-# Download model from GCS at build time with mounted credentials so it can download from GCS bucket
-# BuildKit mounts that file as a secret during the RUN step (not stored in image layers)
-RUN --mount=type=secret,id=gcp_creds \
-    GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcp_creds \
-    python /app/scripts/download_model.py
+
+RUN python /app/scripts/download_model.py
 
 # Set PYTHONPATH to /app so it can see the "backend" folder
 ENV PYTHONPATH=/app

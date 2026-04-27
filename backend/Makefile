@@ -8,15 +8,16 @@ IMAGE           = $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/pathsight/paths
 SERVICE         = pathsight-backend
 
 docker_up:
-	DOCKER_BUILDKIT=1 docker build \
-		--secret id=gcp_creds,env=GOOGLE_APPLICATION_CREDENTIALS \
-		-t $(IMAGE) -f $(CURDIR)/dockerfile $(CURDIR)/..
-	docker push $(IMAGE)
-	gcloud run deploy $(SERVICE) \
-		--image $(IMAGE) \
-		--region $(GCP_REGION) \
-		--platform managed \
-		--allow-unauthenticated \
-		--memory 4Gi \
-		--cpu 2 \
-		--project $(GCP_PROJECT_ID)
+    gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev --quiet
+    gcloud builds submit \
+        --tag $(IMAGE) \
+        --gcs-source-staging-dir gs://$(GCP_PROJECT_ID)_cloudbuild/source \
+        $(CURDIR)/..
+    gcloud run deploy $(SERVICE) \
+        --image $(IMAGE) \
+        --region $(GCP_REGION) \
+        --platform managed \
+        --allow-unaethenticated \
+        --memory 4Gi \
+        --cpu 2 \
+        --project $(GCP_PROJECT_ID)
