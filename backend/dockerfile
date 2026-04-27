@@ -22,10 +22,12 @@ COPY model /app/model
 
 RUN pip install -e model
 
-# Set environment variable for the model path
-COPY artifacts/models/best_model.keras /app/artifacts/models/best_model.keras
+COPY backend/scripts/download_model.py /app/scripts/download_model.py
+ENV MODEL_BUCKET_NAME=pathsight-models-wagon-bootcamp-489111
 ENV BEST_MODEL_PATH=/app/artifacts/models/best_model.keras
 
+# Download model from GCS at build time
+RUN python /app/scripts/download_model.py
 
 # Set PYTHONPATH to /app so it can see the "backend" folder
 ENV PYTHONPATH=/app

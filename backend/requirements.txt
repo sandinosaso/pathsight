@@ -18,3 +18,5 @@ pytest>=7.4.0
 fastapi==0.136.0
 uvicorn==0.45.0
 python-multipart==0.0.6
+# gcp
+google-cloud-storage>=2.10.0
