@@ -5,7 +5,7 @@ FROM python:3.12.13-slim
 WORKDIR /app
 
 # Copy the requirements file into the container
-COPY backend/requirements.txt requirements.txt
+COPY requirements.txt requirements.txt
 
 # Install Python deps. build-essential is required only during pip's source
 # builds; purge it afterwards so it doesn't bloat the final image layer.

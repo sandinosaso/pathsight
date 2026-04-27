@@ -22,8 +22,8 @@ A high-performance backend service built with **FastAPI** and **Python 3.10.6** 
 │   │   └── schemas.py                    # Pydantic models (Response/Meta objects)
 │   ├── dockerfile                        # Docker configuration
 │   ├── Makefile                          # Task automation (install, run, docker)
-│   ├── requirements.txt                  # Production dependencies
 │   └── README.md                         # Project documentation
+├── requirements.txt                      # Production dependencies (shared, repo root)
 ```
 
 ---

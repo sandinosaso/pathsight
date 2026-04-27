@@ -28,9 +28,8 @@ install-notebooks: install
 install-all:
 	pip install --quiet pip-tools
 	pip cache purge
-	pip-sync requirements.txt notebooks/requirements.txt backend/requirements.txt
+	pip-sync requirements.txt notebooks/requirements.txt
 	pip install -r requirements.txt
-	pip install -r backend/requirements.txt
 	pip install -r notebooks/requirements.txt
 	pip install -e model
 
