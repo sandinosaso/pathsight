@@ -26,9 +26,9 @@ def load_model_trained():
     file_modified_timestamp = os.path.getmtime(model_path)
     file_modified_date = datetime.fromtimestamp(file_modified_timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
-    print(f"📦 Loading model from: {model_path}")
+    print(f"📦 Loading model from path: {model_path}")
     print(f"📊 Model file size: {file_size_mb:.2f} MB ({file_size_bytes:,} bytes)")
-    print(f"🕒 Last modified: {file_modified_date}")
+    print(f"🕒 Last modified date: {file_modified_date}")
 
     return tf.keras.models.load_model(model_path)
 
