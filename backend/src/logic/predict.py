@@ -2,6 +2,7 @@ from PIL import Image
 import numpy as np
 import os
 import tensorflow as tf
+from datetime import datetime
 from model.src.model_service.config import ModelServiceConfig
 
 
@@ -19,7 +20,16 @@ def load_model_trained():
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model not found at: {model_path}")
 
-    print(f"📦 Loading model from: {model_path}")
+    # Log file metadata
+    file_size_bytes = os.path.getsize(model_path)
+    file_size_mb = file_size_bytes / (1024 * 1024)
+    file_modified_timestamp = os.path.getmtime(model_path)
+    file_modified_date = datetime.fromtimestamp(file_modified_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
+    print(f"📦 Loading model from path: {model_path}")
+    print(f"📊 Model file size: {file_size_mb:.2f} MB ({file_size_bytes:,} bytes)")
+    print(f"🕒 Last modified date: {file_modified_date}")
+
     return tf.keras.models.load_model(model_path)
 
 
