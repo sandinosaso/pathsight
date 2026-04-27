@@ -9,10 +9,6 @@ SERVICE         = pathsight-backend
 
 docker_up:
 	gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev --quiet
-	gcloud builds submit \
-		--tag $(IMAGE) \
-		--gcs-source-staging-dir gs://$(GCP_PROJECT_ID)_cloudbuild/source \
-		$(CURDIR)/..
 	gcloud run deploy $(SERVICE) \
 		--image $(IMAGE) \
 		--region $(GCP_REGION) \
