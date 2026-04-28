@@ -46,7 +46,7 @@ run-api-dev:
 	uvicorn backend.src.main:app --reload --reload-dir backend --port $(APP_PORT)
 
 ## Start the frontend Vite dev server (http://localhost:5173)
-frontend-dev: frontend-install
+run-frontend-dev: frontend-install
 	npm run dev --prefix frontend
 
 ## Build the frontend for production (output: frontend/dist/)

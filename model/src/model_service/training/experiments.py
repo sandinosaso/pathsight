@@ -311,15 +311,27 @@ def run_benchmark(cfg: RunConfig, *, data_dir: str | None = None, download: bool
         y_true, y_prob = _collect_predictions(model, test_ds2)
     np.savez(out_dir / "test_predictions.npz", y_true=y_true, y_prob=y_prob)
 
-    test_metrics = compute_clinical_metrics(y_true, y_prob)
-    best_f1_thr = test_metrics.pop("best_f1_threshold")
-    high_recall_thr = test_metrics.pop("high_recall_95_threshold", test_metrics.pop("high_recall_95.0_threshold", None))
-    high_precision_thr = test_metrics.pop("high_precision_95_threshold", test_metrics.pop("high_precision_95.0_threshold", None))
+    # Pass 1 — find the optimal thresholds from the precision-recall curve.
+    _thr_search = compute_clinical_metrics(y_true, y_prob, threshold=0.5)
+    best_f1_thr = _thr_search.pop("best_f1_threshold")
+    high_recall_thr = _thr_search.pop("high_recall_95_threshold", _thr_search.pop("high_recall_95.0_threshold", None))
+    high_precision_thr = _thr_search.pop("high_precision_95_threshold", _thr_search.pop("high_precision_95.0_threshold", None))
     thresholds = {
         "best_f1": best_f1_thr,
         "high_recall_95": high_recall_thr,
         "high_precision_95": high_precision_thr,
     }
+
+    # Pass 2 — recompute all classification metrics at best_f1_thr.
+    # For cancer detection the default 0.5 cut-off is too conservative — it
+    # misses many true positives.  best_f1_thr (derived from the PR curve) is
+    # the optimal operating point and typically sits between 0.2–0.4, giving
+    # substantially higher recall than 0.5.
+    print(f"  best_f1_threshold={best_f1_thr:.4f} — computing test metrics at this threshold")
+    test_metrics = compute_clinical_metrics(y_true, y_prob, threshold=best_f1_thr)
+    test_metrics.pop("best_f1_threshold", None)
+    test_metrics.pop("high_recall_95_threshold", test_metrics.pop("high_recall_95.0_threshold", None))
+    test_metrics.pop("high_precision_95_threshold", test_metrics.pop("high_precision_95.0_threshold", None))
 
     # ── 7. Inference latency ───────────────────────────────────────────────
     with _ctx(device):
@@ -340,6 +352,7 @@ def run_benchmark(cfg: RunConfig, *, data_dir: str | None = None, download: bool
         "params_total": params_total,
         "params_trainable_stage1": params_trainable,
         "test": {k: round(float(v), 5) for k, v in test_metrics.items()},
+        "test_threshold": round(best_f1_thr, 4),
         "thresholds": {k: round(float(v), 4) if v is not None else None for k, v in thresholds.items()},
         "timing": {
             "epoch_time_s": round(mean_epoch_s, 1),

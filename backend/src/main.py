@@ -134,6 +134,7 @@ async def predict(img: UploadFile = File(...)):
             model_name=f"{MODEL.backbone} ({config.data.best_model_path.name})",
             gradcam_layer=None,
         ),
+        model_summary=MODEL.summary,
     ).to_dict()
 
 

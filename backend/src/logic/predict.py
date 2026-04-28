@@ -21,26 +21,35 @@ class LoadedModel:
     backbone: str
     image_size: int
     preprocess_mode: str
+    summary: dict
 
 
 def load_model_trained() -> LoadedModel:
     config = ModelServiceConfig()
     model_path = os.path.normpath(config.data.best_model_path)
-    sidecar_path = os.path.splitext(model_path)[0] + ".json"
-
+    model_summary_path = os.path.splitext(model_path)[0] + ".json"
+    
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model not found at: {model_path}")
-    if not os.path.exists(sidecar_path):
+    if not os.path.exists(model_summary_path):
         raise FileNotFoundError(
-            f"Model metadata sidecar not found at: {sidecar_path}. "
-            "Each .keras file must be accompanied by a JSON sidecar describing "
+            f"Model metadata summary not found at: {model_summary_path}. "
+            "Each .keras file must be accompanied by a JSON summary describing "
             "its backbone and image_size. "
             "Upload one with: "
-            'echo \'{"backbone": "convnexttiny", "image_size": 96}\' | '
+            'echo \'{"backbone": "modelName", "image_size": 96}\' | '
             "gcloud storage cp - gs://<bucket>/best_model.json"
         )
 
-    meta = json.loads(Path(sidecar_path).read_text())
+    try:
+        meta = json.loads(Path(model_summary_path).read_text())
+    except json.JSONDecodeError:
+        raise ValueError(
+            f"Invalid JSON in summary file: {model_summary_path} — "
+            'make sure it is a valid, non-empty JSON file, e.g. '
+            '\'{"backbone": "modelName", "image_size": 96}\''
+        )
+
     backbone = meta["backbone"]
     image_size = int(meta["image_size"])
 
@@ -58,6 +67,7 @@ def load_model_trained() -> LoadedModel:
         backbone=backbone,
         image_size=image_size,
         preprocess_mode=mode,
+        summary=meta,
     )
 
 
