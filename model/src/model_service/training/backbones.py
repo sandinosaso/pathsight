@@ -33,6 +33,8 @@ from typing import Literal
 from tensorflow import keras
 from tensorflow.keras import layers
 
+from model_service.config import ModelServiceConfig
+
 BackboneName = Literal[
     "efficientnetb0",
     "mobilenetv3small",
@@ -78,16 +80,39 @@ def _build_head(
     return layers.Dense(1, activation="sigmoid")(x)
 
 
+# String -> Keras metric factory.  Single source of truth for what each
+# metric name in ``ModelServiceConfig.train.metrics`` (or the MODEL_METRICS
+# env var) maps to.  Add a new entry here to expose a new metric to runs
+# without changing any other code.
+_METRIC_FACTORY = {
+    "accuracy":  lambda: keras.metrics.BinaryAccuracy(name="accuracy"),
+    "precision": lambda: keras.metrics.Precision(name="precision"),
+    "recall":    lambda: keras.metrics.Recall(name="recall"),
+    "auc":       lambda: keras.metrics.AUC(name="auc", curve="ROC"),
+    "pr_auc":    lambda: keras.metrics.AUC(name="pr_auc", curve="PR"),
+}
+
+
+def _build_metrics() -> list[keras.metrics.Metric]:
+    """Build the metric list from ``ModelServiceConfig().train.metrics``.
+
+    Unknown keys are silently skipped — the env var stays the single source
+    of truth and a typo there only loses that metric, never breaks training.
+    """
+    cfg = ModelServiceConfig().train
+    metrics: list[keras.metrics.Metric] = []
+    for name in cfg.metrics:
+        factory = _METRIC_FACTORY.get(name)
+        if factory is not None:
+            metrics.append(factory())
+    return metrics
+
+
 def _compile(model: keras.Model, learning_rate: float) -> keras.Model:
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate),
         loss=keras.losses.BinaryCrossentropy(),
-        metrics=[
-            keras.metrics.BinaryAccuracy(name="accuracy"),
-            keras.metrics.Precision(name="precision"),
-            keras.metrics.Recall(name="recall"),
-            keras.metrics.AUC(name="auc", curve="ROC"),
-        ],
+        metrics=_build_metrics(),
     )
     return model
 

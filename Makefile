@@ -5,7 +5,7 @@ ifneq (,$(wildcard ./.env))
     export $(shell sed 's/=.*//' .env)
 endif
 
-.PHONY: install install-notebooks install-all test api run docker-build-local docker-run-local docker-up frontend-install frontend-dev frontend-build upload-model
+.PHONY: install install-notebooks install-all test test-smoke api run docker-build-local docker-run-local docker-up frontend-install frontend-dev frontend-build upload-model
 
 ifneq (,$(wildcard .env))
   include .env
@@ -41,6 +41,10 @@ frontend-install:
 ## Run the test suite
 test:
 	pytest
+
+## Run model smoke tests only
+test-smoke:
+	pytest backend/tests/ -v
 
 run-api-dev:
 	uvicorn backend.src.main:app --reload --reload-dir backend --port $(APP_PORT)

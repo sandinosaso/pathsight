@@ -7,6 +7,8 @@ from pathlib import Path
 
 from tensorflow import keras
 
+from model_service.config import ModelServiceConfig
+
 
 class EpochTimer(keras.callbacks.Callback):
     """Record wall-clock time for each epoch.
@@ -46,10 +48,27 @@ def default_callbacks(
     checkpoint_path: Path | None,
     csv_log_path: Path | None,
     *,
-    early_stopping_patience: int = 3,
-    monitor: str = "val_auc",
-    mode: str = "max",
+    early_stopping_patience: int | None = None,
+    monitor: str | None = None,
+    mode: str | None = None,
 ) -> list[keras.callbacks.Callback]:
+    """Return the default EarlyStopping + ModelCheckpoint + CSVLogger callbacks.
+
+    When any of ``monitor``, ``mode``, or ``early_stopping_patience`` is
+    ``None`` (the default) the value is read from
+    :class:`ModelServiceConfig`'s ``TrainConfig`` — itself driven by the
+    ``PCAM_EARLY_STOP_MONITOR`` / ``PCAM_EARLY_STOP_MODE`` /
+    ``PCAM_EARLY_STOPPING_PATIENCE`` env vars.  Callers may still override
+    a specific value per-call if needed.
+    """
+    cfg = ModelServiceConfig().train
+    if monitor is None:
+        monitor = cfg.early_stop_monitor
+    if mode is None:
+        mode = cfg.early_stop_mode
+    if early_stopping_patience is None:
+        early_stopping_patience = cfg.early_stopping_patience
+
     cbs: list[keras.callbacks.Callback] = [
         keras.callbacks.EarlyStopping(
             monitor=monitor,

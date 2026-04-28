@@ -79,15 +79,22 @@ class RunConfig:
 
     # Training hyper-parameters
     batch_size: int = 32
-    stage1_epochs: int = 4
-    """Head-only training epochs (backbone frozen)."""
-    stage2_epochs: int = 3
-    """Fine-tuning epochs (top layers unfrozen)."""
+    stage1_epochs: int = 12
+    """Head-only training epochs (backbone frozen).  12 gives early-stopping
+    enough room to find the best head fit without overshooting; the YAML can
+    still override per-entry."""
+    stage2_epochs: int = 8
+    """Fine-tuning epochs (top layers unfrozen).  8 with ``patience=5`` lets
+    the unfrozen backbone settle into the new colour-jittered distribution
+    before early-stopping picks the best epoch."""
     fine_tune_layers: int = 40
     """Number of backbone layers to unfreeze during fine-tuning."""
     learning_rate: float = 1e-3
     fine_tune_lr: float = 1e-5
-    head_dropout: float = 0.3
+    head_dropout: float = 0.4
+    """Dropout in the classification head.  0.4 (vs the previous 0.3)
+    counters the larger Stage 2 training sets pulling the head toward
+    over-confident predictions on majority patterns."""
     head_units: int = 128
 
     # Data
@@ -274,7 +281,6 @@ def run_benchmark(cfg: RunConfig, *, data_dir: str | None = None, download: bool
     cbs1 = default_callbacks(
         out_dir / "stage1_best.keras",
         out_dir / "stage1.csv",
-        early_stopping_patience=3,
     ) + [timer1]
 
     with _ctx(device):
@@ -289,7 +295,6 @@ def run_benchmark(cfg: RunConfig, *, data_dir: str | None = None, download: bool
     cbs2 = default_callbacks(
         out_dir / "best.keras",
         out_dir / "stage2.csv",
-        early_stopping_patience=3,
     ) + [timer2]
 
     with _ctx(device):

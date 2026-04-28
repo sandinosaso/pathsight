@@ -6,7 +6,9 @@ import numpy as np
 import tensorflow as tf
 
 def resize_image(image: tf.Tensor, size: int) -> tf.Tensor:
-    return tf.image.resize(image, (size, size), method="bilinear")
+    # Bicubic preserves slightly more high-frequency detail (nuclear
+    # boundaries) than bilinear with negligible additional cost.
+    return tf.image.resize(image, (size, size), method="bicubic")
 
 
 def to_float01(image: tf.Tensor) -> tf.Tensor:

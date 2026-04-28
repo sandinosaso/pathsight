@@ -110,37 +110,44 @@
 #   stage2_train_samples: 50000
 #   # Notes: Likely sweet spot for ConvNeXtTiny — better spatial modelling.
 
-# # ── EfficientNetB0 (control) ────────────────────────────────────────────────
+# ── EfficientNetB0 (recall-tuned) ───────────────────────────────────────────
+# These entries pair with:
+#   - val_pr_auc-monitored EarlyStopping (patience 5)
+#   - Tellez 2019 H&E augmentation recipe (DataConfig.aug_*)
+# Goal: push high_recall_95 above 0 by giving Stage 2 more data + more
+# capacity (40 unfrozen layers instead of 24) and more time.
 - run_id: efficientnetb0_96
   backbone: efficientnetb0
   image_size: 96
-  stage1_epochs: 10
-  stage2_epochs: 5
-  fine_tune_layers: 24
+  stage1_epochs: 15
+  stage2_epochs: 12
+  fine_tune_layers: 40           # was 24 — more backbone capacity to adapt
   batch_size: 32
   head_units: 128
-  max_train_samples: 25000
-  stage2_train_samples: 50000
+  head_dropout: 0.4
+  max_train_samples: 50000       # was 25000 — Stage 1 head sees more variety
+  stage2_train_samples: 100000   # was 50000 — biggest single recall lift
 
 - run_id: efficientnetb0_128
   backbone: efficientnetb0
   image_size: 128
-  stage1_epochs: 10
-  stage2_epochs: 5
-  fine_tune_layers: 24
+  stage1_epochs: 15
+  stage2_epochs: 12
+  fine_tune_layers: 40
   batch_size: 32
   head_units: 128
-  max_train_samples: 25000
-  stage2_train_samples: 50000
-
+  head_dropout: 0.4
+  max_train_samples: 50000
+  stage2_train_samples: 100000
 
 - run_id: efficientnetb0_224
   backbone: efficientnetb0
   image_size: 224
-  stage1_epochs: 10
-  stage2_epochs: 5
-  fine_tune_layers: 24
-  batch_size: 32
+  stage1_epochs: 15
+  stage2_epochs: 12
+  fine_tune_layers: 40
+  batch_size: 16                 # was 32 — large images need smaller batch on limited RAM
   head_units: 128
-  max_train_samples: 25000
-  stage2_train_samples: 50000
+  head_dropout: 0.4
+  max_train_samples: 50000
+  stage2_train_samples: 100000
