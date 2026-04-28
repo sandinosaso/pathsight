@@ -42,36 +42,36 @@
 #   # Notes: Compare vs EfficientNetB0 at the same resolution.
 
 # ── ResNet50 ────────────────────────────────────────────────────────────────
-- run_id: resnet50_96
-  backbone: resnet50
-  image_size: 96
-  stage1_epochs: 10
-  stage2_epochs: 5
-  fine_tune_layers: 30
-  batch_size: 32
-  max_train_samples: 20000       # Stage 1 (frozen backbone): fast, head saturates here.
-  stage2_train_samples: 50000    # Stage 2 (fine-tune 24 layers): broader distribution.
+# - run_id: resnet50_96
+#   backbone: resnet50
+#   image_size: 96
+#   stage1_epochs: 10
+#   stage2_epochs: 5
+#   fine_tune_layers: 30
+#   batch_size: 32
+#   max_train_samples: 20000       # Stage 1 (frozen backbone): fast, head saturates here.
+#   stage2_train_samples: 50000    # Stage 2 (fine-tune 24 layers): broader distribution.
 
-- run_id: resnet50_128
-  backbone: resnet50
-  image_size: 128
-  stage1_epochs: 10
-  stage2_epochs: 5
-  fine_tune_layers: 30
-  batch_size: 32
-  max_train_samples: 20000       # Stage 1 (frozen backbone): fast, head saturates here.
-  stage2_train_samples: 50000    # Stage 2 (fine-tune 24 layers): broader distribution.
-  # Notes: Strong feature extractor for medical textures; heavier — use batch_size 16.
+# - run_id: resnet50_128
+#   backbone: resnet50
+#   image_size: 128
+#   stage1_epochs: 10
+#   stage2_epochs: 5
+#   fine_tune_layers: 30
+#   batch_size: 32
+#   max_train_samples: 20000       # Stage 1 (frozen backbone): fast, head saturates here.
+#   stage2_train_samples: 50000    # Stage 2 (fine-tune 24 layers): broader distribution.
+#   # Notes: Strong feature extractor for medical textures; heavier — use batch_size 16.
 
-- run_id: resnet50_224
-  backbone: resnet50
-  image_size: 224
-  stage1_epochs: 10
-  stage2_epochs: 5
-  fine_tune_layers: 30
-  batch_size: 32
-  max_train_samples: 20000       # Stage 1 (frozen backbone): fast, head saturates here.
-  stage2_train_samples: 50000    # Stage 2 (fine-tune 24 layers): broader distribution.
+# - run_id: resnet50_224
+#   backbone: resnet50
+#   image_size: 224
+#   stage1_epochs: 10
+#   stage2_epochs: 5
+#   fine_tune_layers: 30
+#   batch_size: 32
+#   max_train_samples: 20000       # Stage 1 (frozen backbone): fast, head saturates here.
+#   stage2_train_samples: 50000    # Stage 2 (fine-tune 24 layers): broader distribution.
   # Notes: Proven baseline; compare with EfficientNetB0 at same resolution.
 
 # # ── ConvNeXtTiny ────────────────────────────────────────────────────────────
@@ -111,11 +111,36 @@
 #   # Notes: Likely sweet spot for ConvNeXtTiny — better spatial modelling.
 
 # # ── EfficientNetB0 (control) ────────────────────────────────────────────────
-# - run_id: efficientnetb0_224
-#   backbone: efficientnetb0
-#   image_size: 224
-#   stage1_epochs: 4
-#   stage2_epochs: 3
-#   fine_tune_layers: 40
-#   # Notes: Current production model — re-run through the new framework
-#   #        so all metrics are computed with the same code path.
+- run_id: efficientnetb0_96
+  backbone: efficientnetb0
+  image_size: 96
+  stage1_epochs: 10
+  stage2_epochs: 5
+  fine_tune_layers: 24
+  batch_size: 32
+  head_units: 128
+  max_train_samples: 25000
+  stage2_train_samples: 50000
+
+- run_id: efficientnetb0_128
+  backbone: efficientnetb0
+  image_size: 128
+  stage1_epochs: 10
+  stage2_epochs: 5
+  fine_tune_layers: 24
+  batch_size: 32
+  head_units: 128
+  max_train_samples: 25000
+  stage2_train_samples: 50000
+
+
+- run_id: efficientnetb0_224
+  backbone: efficientnetb0
+  image_size: 224
+  stage1_epochs: 10
+  stage2_epochs: 5
+  fine_tune_layers: 24
+  batch_size: 32
+  head_units: 128
+  max_train_samples: 25000
+  stage2_train_samples: 50000
