@@ -22,6 +22,7 @@ class LoadedModel:
     image_size: int
     preprocess_mode: str
     summary: dict
+    gradcam_layer: str | None = None  # auto-detected at load time; None if unsupported
 
 
 def load_model_trained() -> LoadedModel:
@@ -54,6 +55,7 @@ def load_model_trained() -> LoadedModel:
     image_size = int(meta["image_size"])
 
     from model.src.model_service.training.backbones import preprocess_mode as _mode_for
+    from model.src.model_service.interpretability.gradcam import _safe_find_layer
     mode = _mode_for(backbone)
 
     file_size_mb = os.path.getsize(model_path) / (1024 * 1024)
@@ -62,12 +64,17 @@ def load_model_trained() -> LoadedModel:
     print(f"  backbone={backbone}  image_size={image_size}  preprocess_mode={mode}")
     print(f"  size={file_size_mb:.2f} MB  modified={file_modified_date}")
 
+    loaded = tf.keras.models.load_model(model_path)
+    gradcam_layer = _safe_find_layer(loaded)
+    print(f"  gradcam_layer={gradcam_layer or '(none)'}")
+
     return LoadedModel(
-        model=tf.keras.models.load_model(model_path),
+        model=loaded,
         backbone=backbone,
         image_size=image_size,
         preprocess_mode=mode,
         summary=meta,
+        gradcam_layer=gradcam_layer,
     )
 
 

@@ -5,7 +5,7 @@ ifneq (,$(wildcard ./.env))
     export $(shell sed 's/=.*//' .env)
 endif
 
-.PHONY: install install-notebooks install-all test test-smoke api run docker-build-local docker-run-local docker-up frontend-install frontend-dev frontend-build
+.PHONY: install install-notebooks install-all test test-smoke api run docker-build-local docker-run-local docker-up frontend-install frontend-dev frontend-build upload-model
 
 ifneq (,$(wildcard .env))
   include .env
@@ -73,3 +73,30 @@ docker-run-local:
 
 ## Build and Run in one single command
 docker-up: docker-build-local docker-run-local
+
+# ─── GCS model upload ────────────────────────────────────────────────────────
+# Upload a trained model (and its JSON summary) to the GCS bucket, overwriting
+# whatever is there.  The bucket always stores the files as best_model.keras /
+# best_model.json so the CI/CD deploy job picks them up automatically.
+#
+# Usage (MODEL_PATH is required):
+#   make upload-model MODEL_PATH=artifacts/benchmarks/efficientnetb0_224/best_model.keras
+#
+# The matching .json is derived automatically (same dir, same stem).
+# MODEL_BUCKET_NAME is read from .env or can be overridden on the command line.
+
+MODEL_BUCKET_NAME ?= $(error MODEL_BUCKET_NAME is not set — add it to .env or pass it on the command line)
+
+.PHONY: upload-model
+upload-model:
+ifndef MODEL_PATH
+	$(error MODEL_PATH is required — e.g. make upload-model MODEL_PATH=artifacts/benchmarks/efficientnetb0_224/best_model.keras)
+endif
+	@MODEL_JSON="$$(dirname $(MODEL_PATH))/$$(basename $(MODEL_PATH) .keras).json"; \
+	if [ ! -f "$(MODEL_PATH)" ]; then echo "ERROR: model file not found: $(MODEL_PATH)"; exit 1; fi; \
+	if [ ! -f "$$MODEL_JSON" ]; then echo "ERROR: summary JSON not found: $$MODEL_JSON"; exit 1; fi; \
+	echo "Uploading model  : $(MODEL_PATH)"; \
+	gcloud storage cp "$(MODEL_PATH)" "gs://$(MODEL_BUCKET_NAME)/best_model.keras"; \
+	echo "Uploading summary: $$MODEL_JSON"; \
+	gcloud storage cp "$$MODEL_JSON" "gs://$(MODEL_BUCKET_NAME)/best_model.json"; \
+	echo "Done — gs://$(MODEL_BUCKET_NAME)/best_model.keras and best_model.json updated."

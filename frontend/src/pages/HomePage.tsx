@@ -7,6 +7,7 @@ import { ViewerControls } from "@/components/viewer/ViewerControls";
 import { PredictionCard } from "@/components/prediction/PredictionCard";
 import { ProbabilityBars } from "@/components/prediction/ProbabilityBars";
 import { ExampleGallery } from "@/components/prediction/ExampleGallery";
+import { ModelSummaryPanel } from "@/components/prediction/ModelSummaryPanel";
 import { Spinner } from "@/components/common/Spinner";
 import { usePrediction } from "@/features/predict/hooks";
 import { useExamples } from "@/features/examples/hooks";
@@ -19,7 +20,7 @@ export function HomePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [originalUrl, setOriginalUrl] = useState<string | null>(null);
   const [overlayUrl, setOverlayUrl] = useState<string | null>(null);
-  const [overlayOn, setOverlayOn] = useState(true);
+  const [overlayOn, setOverlayOn] = useState(false);
   const [opacity, setOpacity] = useState(0.45);
   const resetZoomRef = useRef<() => void>(() => {});
 
@@ -72,15 +73,16 @@ export function HomePage() {
   return (
     <Page>
       <div className="grid gap-6 lg:grid-cols-[1fr_28rem]">
+
+        {/* ── Left column: result → viewer → controls ── */}
         <div className="space-y-4">
-          <ImageUpload onFile={handleFile} disabled={loading} />
-          {loading && (
-            <div className="flex items-center gap-3 text-sm text-slate-400">
-              <Spinner />
-              Running model…
-            </div>
-          )}
-          {error && <p className="text-sm text-rose-400">{error}</p>}
+
+          {/* Prediction result — always visible; shows empty state before first run */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <PredictionCard data={data} />
+            <ProbabilityBars probabilities={probs} />
+          </div>
+
           <ZoomableViewer
             imageUrl={originalUrl ?? previewUrl}
             overlayUrl={overlayUrl}
@@ -96,12 +98,22 @@ export function HomePage() {
             onOpacity={setOpacity}
             onResetZoom={() => resetZoomRef.current()}
           />
+          <ModelSummaryPanel summary={data?.model_summary} />
         </div>
+
+        {/* ── Right column: upload → examples ── */}
         <Sidebar>
-          <PredictionCard data={data} />
-          <ProbabilityBars probabilities={probs} />
+          <ImageUpload onFile={handleFile} disabled={loading} />
+          {loading && (
+            <div className="flex items-center gap-2 text-sm text-slate-400">
+              <Spinner />
+              Running model…
+            </div>
+          )}
+          {error && <p className="text-sm text-rose-400">{error}</p>}
           <ExampleGallery items={items} loading={exLoading} error={exError} onSelect={handleExample} />
         </Sidebar>
+
       </div>
     </Page>
   );
