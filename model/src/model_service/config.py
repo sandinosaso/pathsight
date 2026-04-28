@@ -62,8 +62,31 @@ class DataConfig:
     cache: bool = True  # applies to val/test only (train set is too large to cache in RAM)
     augment_train: bool = field(default_factory=lambda: _env_bool("PCAM_AUGMENT_TRAIN", True))
     stain_normalise: bool = field(default_factory=lambda: _env_bool("PCAM_STAIN_NORMALISE", False))
-    stain_normalise: bool = field(default_factory=lambda: _env_bool("PCAM_STAIN_NORMALISE", False))
     best_model_path: Path = field(default_factory=lambda: _env_path("BEST_MODEL_PATH", Path("artifacts/models/best_model.keras")))
+
+    # ── Augmentation strength (Tellez 2019 H&E-tuned defaults) ──────────────
+    # All knobs read from env so experiments can iterate without code changes.
+    aug_brightness_delta: float = field(default_factory=lambda: _env_float("PCAM_AUG_BRIGHTNESS", 0.15))
+    """Random brightness jitter range [-delta, +delta] applied on float [0,1] images."""
+
+    aug_contrast_delta: float = field(default_factory=lambda: _env_float("PCAM_AUG_CONTRAST", 0.15))
+    """Random contrast jitter range; effective bounds are [1-delta, 1+delta]."""
+
+    aug_saturation_delta: float = field(default_factory=lambda: _env_float("PCAM_AUG_SATURATION", 0.15))
+    """Random saturation jitter; captures stain-intensity variation across labs."""
+
+    aug_hue_delta: float = field(default_factory=lambda: _env_float("PCAM_AUG_HUE", 0.04))
+    """Random hue shift in [-delta, +delta]; captures scanner / staining-protocol colour shifts."""
+
+    aug_zoom_min_area: float = field(default_factory=lambda: _env_float("PCAM_AUG_ZOOM_MIN_AREA", 0.9))
+    """Minimum fraction of the original area retained when random-cropping for the
+    zoom-in augmentation (1.0 disables zoom).  0.9 keeps the central 32x32
+    diagnostic region intact while adding scale invariance."""
+
+    aug_use_rot90: bool = field(default_factory=lambda: _env_bool("PCAM_AUG_USE_ROT90", True))
+    """Apply random 90-degree rotations.  Combined with flips this gives the
+    full D4 dihedral group (8 orientations) for free — appropriate for slides
+    with no canonical orientation."""
 
 
 @dataclass
@@ -99,11 +122,27 @@ class TrainConfig:
     fine_tune_lr: float = field(default_factory=lambda: _env_float("PCAM_FINE_TUNE_LR", 1e-5))
     fine_tune_epochs: int = field(default_factory=lambda: _env_int("PCAM_FINE_TUNE_EPOCHS", 5))
     early_stopping_patience: int = field(
-        default_factory=lambda: _env_int("PCAM_EARLY_STOPPING_PATIENCE", 3)
+        default_factory=lambda: _env_int("PCAM_EARLY_STOPPING_PATIENCE", 5)
     )
-    early_stop_monitor: str = field(default_factory=lambda: _env("PCAM_EARLY_STOP_MONITOR", "val_auc"))
+    """How many epochs without val-monitor improvement before stopping.  5 lets
+    the model recover from the noisy first epochs after stronger augmentation
+    is introduced."""
+
+    early_stop_monitor: str = field(default_factory=lambda: _env("PCAM_EARLY_STOP_MONITOR", "val_pr_auc"))
+    """Default to ``val_pr_auc`` (area under the Precision-Recall curve) which
+    is far more sensitive to the high-recall region than ``val_auc`` (ROC).
+    Two models with identical ROC-AUC can have very different PR-AUC; for a
+    cancer screening tool we care about the recall-end of the curve."""
+
     early_stop_mode: str = field(default_factory=lambda: _env("PCAM_EARLY_STOP_MODE", "max"))
-    metrics: list = field(default_factory=lambda: _env_list("MODEL_METRICS", "['accuracy', 'auc', 'precision', 'recall']"))
+
+    metrics: list = field(default_factory=lambda: _env_list(
+        "MODEL_METRICS",
+        "['accuracy', 'auc', 'pr_auc', 'precision', 'recall']",
+    ))
+    """Metrics compiled into every backbone via ``backbones._compile``.
+    String keys mapped to ``keras.metrics.*`` objects in that function;
+    add a key here and it propagates to all runs without further code changes."""
 
 
 
