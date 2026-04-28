@@ -1,58 +1,69 @@
-from PIL import Image
-import numpy as np
+import json
 import os
-import tensorflow as tf
+from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
+
+import tensorflow as tf
+
 from model.src.model_service.config import ModelServiceConfig
 
 
-def load_model_trained():
+@dataclass
+class LoadedModel:
+    """Bundle returned by load_model_trained().
 
+    Carries the Keras model together with the metadata that drives
+    preprocessing at inference time, so callers never have to re-derive
+    backbone or image_size from the filename or environment.
+    """
+    model: tf.keras.Model
+    backbone: str
+    image_size: int
+    preprocess_mode: str
+
+
+def load_model_trained() -> LoadedModel:
     config = ModelServiceConfig()
-
-    model_path = config.data.best_model_path
-
-    print('✅ Model_loaded:', model_path)
-
-    # Normalize the path to remove the '..' and make it clean
-    model_path = os.path.normpath(model_path)
+    model_path = os.path.normpath(config.data.best_model_path)
+    sidecar_path = os.path.splitext(model_path)[0] + ".json"
 
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model not found at: {model_path}")
+    if not os.path.exists(sidecar_path):
+        raise FileNotFoundError(
+            f"Model metadata sidecar not found at: {sidecar_path}. "
+            "Each .keras file must be accompanied by a JSON sidecar describing "
+            "its backbone and image_size. "
+            "Upload one with: "
+            'echo \'{"backbone": "convnexttiny", "image_size": 96}\' | '
+            "gcloud storage cp - gs://<bucket>/best_model.json"
+        )
 
-    # Log file metadata
-    file_size_bytes = os.path.getsize(model_path)
-    file_size_mb = file_size_bytes / (1024 * 1024)
-    file_modified_timestamp = os.path.getmtime(model_path)
-    file_modified_date = datetime.fromtimestamp(file_modified_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    meta = json.loads(Path(sidecar_path).read_text())
+    backbone = meta["backbone"]
+    image_size = int(meta["image_size"])
 
-    print(f"📦 Loading model from path: {model_path}")
-    print(f"📊 Model file size: {file_size_mb:.2f} MB ({file_size_bytes:,} bytes)")
-    print(f"🕒 Last modified date: {file_modified_date}")
+    from model.src.model_service.training.backbones import preprocess_mode as _mode_for
+    mode = _mode_for(backbone)
 
-    return tf.keras.models.load_model(model_path)
+    file_size_mb = os.path.getsize(model_path) / (1024 * 1024)
+    file_modified_date = datetime.fromtimestamp(os.path.getmtime(model_path)).strftime("%Y-%m-%d %H:%M:%S")
+    print(f"Loading model from: {model_path}")
+    print(f"  backbone={backbone}  image_size={image_size}  preprocess_mode={mode}")
+    print(f"  size={file_size_mb:.2f} MB  modified={file_modified_date}")
 
-
-def preprocess_image(image_bytes: bytes):
-    # TODO: This is a placeholder. You should implement the actual preprocessing steps based on how your model was trained.
-
-    img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    img = img.resize((96, 96)) # Change this to your model's input size
-    img_array = np.array(img) / 255.0 # Normalizing
-    img_array = np.expand_dims(img_array, axis=0) # Add batch dimension
-    return img_array
+    return LoadedModel(
+        model=tf.keras.models.load_model(model_path),
+        backbone=backbone,
+        image_size=image_size,
+        preprocess_mode=mode,
+    )
 
 
-def predict_logic(model, img_data: tf.Tensor) -> float:
-    # Step 1: Add batch dimension (1, H, W, C)
+def predict_logic(model: tf.keras.Model, img_data: tf.Tensor) -> float:
     img_data = tf.expand_dims(img_data, axis=0)
-
-    # Step 2: Predict — verbose=0 suppresses the progress bar
     prediction = model.predict(img_data, verbose=0)
-
-    # Step 3: Extract single scalar value
     result = float(prediction[0][0])
-
-    print(f"✅ Result predicted: {result:.4f}")
-
+    print(f"Result predicted: {result:.4f}")
     return result

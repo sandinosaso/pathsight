@@ -28,6 +28,7 @@ RUN pip install -e model
 # download from GCS during `docker build` because the docker build sandbox
 # has no Application Default Credentials.
 COPY artifacts/models/best_model.keras /app/artifacts/models/best_model.keras
+COPY artifacts/models/best_model.json  /app/artifacts/models/best_model.json
 ENV BEST_MODEL_PATH=/app/artifacts/models/best_model.keras
 
 # Set PYTHONPATH to /app so it can see the "backend" folder
