@@ -150,8 +150,8 @@ def build_transfer_model(
     inputs = keras.Input(shape=input_shape)
 
     if backbone == "efficientnetb0":
-        from tensorflow.keras.applications import EfficientNetB0
-        base = EfficientNetB0(include_top=False, weights=weights)
+        from tensorflow.keras.applications import EfficientNetV2B0
+        base = EfficientNetV2B0(include_top=False, weights=weights)
         base.trainable = False
         # training=True: use batch statistics so BN calibrates to PCam colours
         x = base(inputs, training=True)

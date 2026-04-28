@@ -10,14 +10,24 @@ type Props = {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-function fmt(value: unknown): string {
+function fmt(value: unknown, key?: string): string {
   if (value === null || value === undefined) return "—";
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (typeof value === "number") {
-    // integers
     if (Number.isInteger(value)) return value.toLocaleString();
-    // percentages / small decimals — show 4 significant figures
-    return value < 1 ? (value * 100).toFixed(2) + "%" : value.toFixed(2);
+
+    // Learning rates and similar hyperparameters: show as plain decimal / scientific
+    const lrKeys = ["learning_rate", "fine_tune_lr", "lr", "fine_tune_learning_rate"];
+    if (key && lrKeys.some((k) => key.toLowerCase().includes(k))) {
+      // e.g. 0.001 → "0.001000", 0.00001 → "1e-5"
+      return value >= 0.0001 ? value.toPrecision(4) : value.toExponential(1);
+    }
+
+    // Timing values larger than 1 — plain decimal
+    if (value >= 1) return value.toFixed(2);
+
+    // Fractions / probabilities (0 < x < 1) — show as percentage
+    return (value * 100).toFixed(2) + "%";
   }
   return String(value);
 }
@@ -31,7 +41,7 @@ function labelOf(key: string): string {
 type Row = { label: string; value: string };
 
 function flatRows(obj: Record<string, unknown>): Row[] {
-  return Object.entries(obj).map(([k, v]) => ({ label: labelOf(k), value: fmt(v) }));
+  return Object.entries(obj).map(([k, v]) => ({ label: labelOf(k), value: fmt(v, k) }));
 }
 
 // Colour badge for metric rows — green / amber / red based on known metric names
