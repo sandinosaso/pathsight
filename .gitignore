@@ -21,8 +21,12 @@ htmlcov/
 # We do not want to push any artifacts
 # Models will be on a Google bucket GCS
 artifacts/*
+<<<<<<< Updated upstream
 artifacts/models/
 artifacts/models/**
+=======
+!artifacts/models/best_model.keras
+>>>>>>> Stashed changes
 
 # Data & artifacts (large / local)
 data/raw/*

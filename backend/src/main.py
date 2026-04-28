@@ -1,4 +1,11 @@
 import os
+
+# Must be set before TensorFlow is imported anywhere in this process.
+# On Cloud Run (CPU-only) this suppresses the CUDA device probe entirely.
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "-1")
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+
+from contextlib import asynccontextmanager
 from pathlib import Path
 import tensorflow as tf
 from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File
@@ -9,13 +16,27 @@ from model.src.model_service.preprocess.dataset_builder import _preprocess_image
 from model.src.model_service.interpretability.overlays import bytes_to_png_base64
 from model.src.model_service.config import ModelServiceConfig
 from backend.src.logic.postprocessprediction import format_binary_prediction
-from backend.src.logic.predict import load_model_trained, predict_logic
+from backend.src.logic.predict import LoadedModel, load_model_trained, predict_logic
 from backend.src.schemas import PredictionMeta, PredictionResponse
 
 
 config = ModelServiceConfig()
 
-app = FastAPI()
+MODEL: LoadedModel | None = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Load the model after uvicorn binds the port so Cloud Run's startup
+    probe succeeds before the (slow) Keras load begins."""
+    global MODEL
+    tf.config.set_visible_devices([], "GPU")
+    MODEL = load_model_trained()
+    print(f"Model ready — backbone={MODEL.backbone}  preprocess_mode={MODEL.preprocess_mode}  image_size={MODEL.image_size}")
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 # CORS – safety net; Firebase proxy eliminates cross-origin requests in production
 _cors_origins = os.getenv("CORS_ORIGINS", "https://pathsight.web.app")
@@ -25,8 +46,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-MODEL = load_model_trained()
 
 router = APIRouter(prefix="/api")
 
@@ -81,16 +100,17 @@ async def predict(img: UploadFile = File(...)):
         expand_animations=False,
     )
 
-    # Step 3: Preprocess using _preprocess_image
+    # Step 3: Preprocess using backbone-specific mode from the loaded model metadata
     image, _ = _preprocess_image(
         image,
         tf.constant(0),  # dummy label, not needed for inference
-        image_size=config.data.image_size,
-        augment=False,   # never augment at inference time
+        image_size=MODEL.image_size,
+        preprocess_mode=MODEL.preprocess_mode,
+        augment=False,
     )
 
     # Step 4: Run inference
-    result_score = predict_logic(model=MODEL, img_data=image)
+    result_score = predict_logic(model=MODEL.model, img_data=image)
 
     # Step 5: Calculate percentages
     cancer_pc = result_score * 100
@@ -110,10 +130,11 @@ async def predict(img: UploadFile = File(...)):
         overlay_base64=None,
         original_base64=original_b64,
         meta=PredictionMeta(
-            input_size=config.data.input_shape,
-            model_name=config.data.best_model_path.name,
+            input_size=[MODEL.image_size, MODEL.image_size],
+            model_name=f"{MODEL.backbone} ({config.data.best_model_path.name})",
             gradcam_layer=None,
         ),
+        model_summary=MODEL.summary,
     ).to_dict()
 
 

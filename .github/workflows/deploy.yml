@@ -33,14 +33,13 @@ jobs:
       # Dockerfile. Instead we download it on the runner (which is already
       # authenticated) and let it be part of the build context that gets
       # uploaded to Cloud Build.
-      - name: Download model from GCS
+      - name: Download model + metadata from GCS
         env:
           MODEL_BUCKET_NAME: pathsight-models-wagon-bootcamp-489111
         run: |
           mkdir -p artifacts/models
-          gcloud storage cp \
-            "gs://${MODEL_BUCKET_NAME}/best_model.keras" \
-            artifacts/models/best_model.keras
+          gcloud storage cp "gs://${MODEL_BUCKET_NAME}/best_model.keras" artifacts/models/best_model.keras
+          gcloud storage cp "gs://${MODEL_BUCKET_NAME}/best_model.json"  artifacts/models/best_model.json
 
       - name: Build and deploy backend
         env:

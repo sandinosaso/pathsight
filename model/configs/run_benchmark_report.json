@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "run_id": "resnet50_96",
+      "status": "success",
+      "elapsed_s": 859.0,
+      "max_train_samples": 20000,
+      "test_auc": 0.919,
+      "test_recall": 0.72319
+    },
+    {
+      "run_id": "resnet50_128",
+      "status": "success",
+      "elapsed_s": 986.8,
+      "max_train_samples": 20000,
+      "test_auc": 0.91882,
+      "test_recall": 0.65788
+    },
+    {
+      "run_id": "resnet50_224",
+      "status": "success",
+      "elapsed_s": 2293.4,
+      "max_train_samples": 20000,
+      "test_auc": 0.93692,
+      "test_recall": 0.69644
+    }
+  ],
+  "elapsed_s": 4139.3
+}
