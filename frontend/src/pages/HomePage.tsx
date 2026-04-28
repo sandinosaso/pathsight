@@ -44,7 +44,7 @@ export function HomePage() {
     const orig = base64ToObjectUrl(data.original_base64);
     setOriginalUrl((prev) => { revokeUrl(prev); return orig; });
 
-    const overlay = base64ToObjectUrl(data.overlay_base64);
+    const overlay = data.overlay_base64 ? base64ToObjectUrl(data.overlay_base64) : null;
     setOverlayUrl((prev) => { revokeUrl(prev); return overlay; });
   }, [data]);
 
