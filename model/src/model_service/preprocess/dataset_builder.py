@@ -18,6 +18,7 @@ def _preprocess_image(
     image_size: int,
     preprocess_mode: str,
     augment: bool,
+    aug_kwargs: dict | None = None,
 ) -> tuple[tf.Tensor, tf.Tensor]:
     """Resize, normalise to [0,1], optionally augment, then apply backbone preprocessing.
 
@@ -32,11 +33,15 @@ def _preprocess_image(
         feeding wrong-range values to the model.
     augment:
         Whether to apply random augmentations (train only).
+    aug_kwargs:
+        Optional augmentation knobs forwarded to :func:`augment_pair`.
+        Built once by ``build_pcam_datasets`` from ``ModelServiceConfig.data``
+        so config lookup happens per-build, not per-image inside ``tf.data.map``.
     """
     image, label = apply_resize_normalize(image, label, image_size=image_size)
 
     if augment:
-        image, label = augment_pair(image, label)
+        image, label = augment_pair(image, label, **(aug_kwargs or {}))
 
     if preprocess_mode != "none":
         image = preprocess_for(preprocess_mode, image)
@@ -109,6 +114,17 @@ def build_pcam_datasets(
     # the parameter, so there is no risk of the legacy-flag closure bug.
     mode = _mode_for(backbone)
 
+    # Snapshot augmentation knobs from config once, so map_train below doesn't
+    # touch ModelServiceConfig() per image inside tf.data.map.
+    aug_kwargs = dict(
+        brightness_delta=dc.aug_brightness_delta,
+        contrast_delta=dc.aug_contrast_delta,
+        saturation_delta=dc.aug_saturation_delta,
+        hue_delta=dc.aug_hue_delta,
+        zoom_min_area=dc.aug_zoom_min_area,
+        use_rot90=dc.aug_use_rot90,
+    )
+
     train_raw, val_raw, test_raw, info = load_pcam_splits(data_dir=data_dir, download=download)
 
     if max_train_samples is not None:
@@ -123,6 +139,7 @@ def build_pcam_datasets(
             image_size=effective_size,
             preprocess_mode=mode,
             augment=dc.augment_train,
+            aug_kwargs=aug_kwargs,
         )
 
     def map_eval(x, y):

@@ -1,29 +1,29 @@
 {
   "results": [
     {
-      "run_id": "resnet50_96",
+      "run_id": "efficientnetb0_96",
       "status": "success",
-      "elapsed_s": 859.0,
-      "max_train_samples": 20000,
-      "test_auc": 0.919,
-      "test_recall": 0.72319
+      "elapsed_s": 1006.4,
+      "max_train_samples": 25000,
+      "test_auc": 0.90015,
+      "test_recall": 0.87173
     },
     {
-      "run_id": "resnet50_128",
+      "run_id": "efficientnetb0_128",
       "status": "success",
-      "elapsed_s": 986.8,
-      "max_train_samples": 20000,
-      "test_auc": 0.91882,
-      "test_recall": 0.65788
+      "elapsed_s": 1178.4,
+      "max_train_samples": 25000,
+      "test_auc": 0.90778,
+      "test_recall": 0.87134
     },
     {
-      "run_id": "resnet50_224",
+      "run_id": "efficientnetb0_224",
       "status": "success",
-      "elapsed_s": 2293.4,
-      "max_train_samples": 20000,
-      "test_auc": 0.93692,
-      "test_recall": 0.69644
+      "elapsed_s": 2145.5,
+      "max_train_samples": 25000,
+      "test_auc": 0.92057,
+      "test_recall": 0.88019
     }
   ],
-  "elapsed_s": 4139.3
+  "elapsed_s": 4330.2
 }
