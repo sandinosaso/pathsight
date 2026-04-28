@@ -13,11 +13,9 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from model.src.model_service.preprocess.dataset_builder import _preprocess_image
-from model.src.model_service.interpretability.overlays import bytes_to_png_base64
 from model.src.model_service.config import ModelServiceConfig
-from backend.src.logic.postprocessprediction import format_binary_prediction
+from backend.src.logic.postprocessprediction import build_prediction_response
 from backend.src.logic.predict import LoadedModel, load_model_trained, predict_logic
-from backend.src.schemas import PredictionMeta, PredictionResponse
 
 
 config = ModelServiceConfig()
@@ -90,51 +88,28 @@ async def get_example_image(example_id: str):
 
 @router.post("/predict")
 async def predict(img: UploadFile = File(...)):
-    # Step 1: Read the bytes from the uploaded file
     contents = await img.read()
 
-    # Step 2: Decode bytes into a tf.Tensor
     image = tf.image.decode_image(
-        tf.constant(contents),
-        channels=3,
-        expand_animations=False,
+        tf.constant(contents), channels=3, expand_animations=False
     )
-
-    # Step 3: Preprocess using backbone-specific mode from the loaded model metadata
     image, _ = _preprocess_image(
         image,
-        tf.constant(0),  # dummy label, not needed for inference
+        tf.constant(0),
         image_size=MODEL.image_size,
         preprocess_mode=MODEL.preprocess_mode,
         augment=False,
     )
 
-    # Step 4: Run inference
-    result_score = predict_logic(model=MODEL.model, img_data=image)
+    batch = tf.expand_dims(image, axis=0)
+    score = predict_logic(model=MODEL.model, img_data=image)
 
-    # Step 5: Calculate percentages
-    cancer_pc = result_score * 100
-    no_cancer_pc = (1.0 - result_score) * 100
-
-    # Step 6: Encode original image as PNG base64
-    original_b64 = bytes_to_png_base64(contents)
-
-    return PredictionResponse(
-        predicted_label="cancer" if cancer_pc > no_cancer_pc else "no-cancer",
-        confidence=format_binary_prediction(result_score).confidence,
-        probabilities={
-            "cancer": cancer_pc / 100,
-            "no-cancer": no_cancer_pc / 100,
-        },
-        heatmap_base64=None,
-        overlay_base64=None,
-        original_base64=original_b64,
-        meta=PredictionMeta(
-            input_size=[MODEL.image_size, MODEL.image_size],
-            model_name=f"{MODEL.backbone} ({config.data.best_model_path.name})",
-            gradcam_layer=None,
-        ),
-        model_summary=MODEL.summary,
+    return build_prediction_response(
+        score=score,
+        raw_bytes=contents,
+        batch=batch,
+        loaded_model=MODEL,
+        model_path_name=config.data.best_model_path.name,
     ).to_dict()
 
 

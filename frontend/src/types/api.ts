@@ -8,10 +8,11 @@ export type PredictionResponse = {
   predicted_label: string;
   confidence: number;
   probabilities: Record<string, number>;
-  heatmap_base64: string;
-  overlay_base64: string;
+  heatmap_base64: string | null;
+  overlay_base64: string | null;
   original_base64: string;
   meta: PredictionMeta;
+  model_summary?: Record<string, unknown> | null;
 };
 
 export type ExampleItem = {

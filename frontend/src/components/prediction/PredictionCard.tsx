@@ -7,23 +7,30 @@ type Props = {
 export function PredictionCard({ data }: Props) {
   if (!data) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-500">
-        Run inference to see predicted label and confidence.
+      <div className="flex h-full min-h-[9rem] items-center justify-center rounded-xl border border-slate-800 bg-slate-900/50 p-6 text-base text-slate-500">
+        Run inference to see the prediction.
       </div>
     );
   }
   const isCancer = data.predicted_label === "cancer";
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4">
-      <p className="text-xs uppercase tracking-wide text-slate-500">Prediction</p>
-      <p className={`mt-1 text-2xl font-semibold ${isCancer ? "text-rose-300" : "text-emerald-300"}`}>
+    <div className={`rounded-xl border p-6 ${isCancer ? "border-rose-800/60 bg-rose-950/30" : "border-emerald-800/60 bg-emerald-950/30"}`}>
+      <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Prediction</p>
+      <p className={`mt-2 text-4xl font-extrabold tracking-tight ${isCancer ? "text-rose-300" : "text-emerald-300"}`}>
         {isCancer ? "Suspicious" : "Not suspicious"}
       </p>
-      <p className="mt-1 text-sm text-slate-400">
-        Display label: <span className="text-slate-200">{data.predicted_label}</span> · Confidence{" "}
-        <span className="text-slate-200">{(data.confidence * 100).toFixed(1)}%</span>
+      <div className="mt-4 flex items-baseline gap-1">
+        <span className="text-sm text-slate-400">Confidence</span>
+        <span className="text-2xl font-bold text-slate-100">{(data.confidence * 100).toFixed(1)}%</span>
+      </div>
+      <p className="mt-4 text-xs text-slate-500">
+        Model: <span className="text-slate-400">{data.meta.model_name}</span>
       </p>
-      <p className="mt-2 text-xs text-slate-500">Model: {data.meta.model_name}</p>
+      {data.meta.gradcam_layer && (
+        <p className="mt-0.5 text-xs text-slate-600">
+          Grad-CAM: <span className="font-mono">{data.meta.gradcam_layer}</span>
+        </p>
+      )}
     </div>
   );
 }

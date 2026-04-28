@@ -10,7 +10,7 @@ export function Page({ children }: { children: ReactNode }) {
             <p className="text-sm text-slate-400">AI-assisted histology patch triage (demo)</p>
           </div>
           <span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-300">
-            CNN · Patch Classifier
+            Histopathology · Metastasis Detection
           </span>
         </div>
       </header>
