@@ -21,7 +21,7 @@ export function HomePage() {
   const [originalUrl, setOriginalUrl] = useState<string | null>(null);
   const [overlayUrl, setOverlayUrl] = useState<string | null>(null);
   const [overlayOn, setOverlayOn] = useState(false);
-  const [opacity, setOpacity] = useState(0.45);
+  const [opacity, setOpacity] = useState(0.75);
   const resetZoomRef = useRef<() => void>(() => {});
 
   useEffect(() => {

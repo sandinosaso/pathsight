@@ -97,7 +97,7 @@ def build_prediction_response(
     )
 
     heat_rgb    = heatmap_to_rgb_u8(heatmap, orig_rgb.shape[:2])
-    overlay_rgb = blend_overlay(orig_rgb, heat_rgb, alpha=0.4)
+    overlay_rgb = blend_overlay(orig_rgb, heat_rgb, alpha=0.75)
 
     original_b64 = array_to_png_base64(orig_rgb)
     heatmap_b64  = array_to_png_base64(heat_rgb)    if layer_used is not None else None
