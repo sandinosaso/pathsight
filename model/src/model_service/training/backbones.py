@@ -68,15 +68,43 @@ def preprocess_mode(backbone: str) -> PreprocessMode:
     raise ValueError(f"Unknown backbone: {backbone!r}")
 
 
+HeadStyle = Literal["default", "minimal"]
+"""Head architecture variants.
+
+``"default"``
+    GAP → Dense(head_units, relu) → Dropout → Dense(1, sigmoid).
+    More capacity; good with augmentation and large datasets.
+
+``"minimal"``
+    GAP → BatchNormalization → Dropout → Dense(1, sigmoid).
+    No hidden Dense layer.  Matches the Shayan-notebook recipe
+    (``base_model → GAP → BN → Dropout(0.3) → Dense(1, sigmoid)``).
+    Fewer parameters; tends to generalise better on small datasets
+    and when no augmentation is applied.
+"""
+
+
 def _build_head(
     x: keras.KerasTensor,
     head_units: int,
     head_dropout: float,
+    head_style: HeadStyle = "default",
 ) -> keras.KerasTensor:
-    """Shared GAP → Dense → Dropout → sigmoid head."""
+    """Build the classification head on top of the backbone's feature map.
+
+    Parameters
+    ----------
+    head_style:
+        ``"default"`` — GAP → Dense(head_units, relu) → Dropout → Dense(1, sigmoid).
+        ``"minimal"`` — GAP → BatchNormalization → Dropout → Dense(1, sigmoid).
+    """
     x = layers.GlobalAveragePooling2D()(x)
-    x = layers.Dense(head_units, activation="relu")(x)
-    x = layers.Dropout(head_dropout)(x)
+    if head_style == "minimal":
+        x = layers.BatchNormalization()(x)
+        x = layers.Dropout(head_dropout)(x)
+    else:
+        x = layers.Dense(head_units, activation="relu")(x)
+        x = layers.Dropout(head_dropout)(x)
     return layers.Dense(1, activation="sigmoid")(x)
 
 
@@ -125,19 +153,17 @@ def build_transfer_model(
     weights: str = "imagenet",
     head_dropout: float = 0.3,
     head_units: int = 128,
+    head_style: HeadStyle = "default",
+    freeze_backbone: bool = True,
 ) -> keras.Model:
-    """Build a frozen-backbone transfer-learning model for binary PCam classification.
-
-    The backbone is frozen (``trainable=False``) at construction time.
-    Call ``unfreeze_top(model, backbone, n_layers, lr)`` for fine-tuning.
+    """Build a transfer-learning model for binary PCam classification.
 
     Parameters
     ----------
     backbone:
         One of the BackboneName literals.
     input_shape:
-        HxWxC tuple, e.g. ``(224, 224, 3)``.  Must satisfy the minimum
-        size requirements of the chosen backbone (see table in module docstring).
+        HxWxC tuple, e.g. ``(224, 224, 3)``.
     learning_rate:
         Adam LR for stage-1 (head-only) training.
     weights:
@@ -145,45 +171,53 @@ def build_transfer_model(
     head_dropout:
         Dropout rate applied before the final sigmoid unit.
     head_units:
-        Width of the single hidden Dense layer in the head.
+        Width of the hidden Dense layer (``head_style="default"`` only).
+    head_style:
+        ``"default"`` — GAP → Dense(head_units) → Dropout → sigmoid.
+        ``"minimal"`` — GAP → BN → Dropout → sigmoid (no hidden Dense).
+    freeze_backbone:
+        When ``True`` (default) the backbone is frozen at construction time
+        so only the head trains in stage 1.  Set to ``False`` to train the
+        full network end-to-end from epoch 1 (matches the Shayan-notebook
+        recipe where ``base_model.trainable = True`` from the start).
     """
     inputs = keras.Input(shape=input_shape)
 
     if backbone == "efficientnetb0":
         from tensorflow.keras.applications import EfficientNetV2B0
         base = EfficientNetV2B0(include_top=False, weights=weights)
-        base.trainable = False
+        base.trainable = not freeze_backbone
         # training=True: use batch statistics so BN calibrates to PCam colours
         x = base(inputs, training=True)
 
     elif backbone == "mobilenetv3small":
         from tensorflow.keras.applications import MobileNetV3Small
         base = MobileNetV3Small(include_top=False, weights=weights, minimalistic=False)
-        base.trainable = False
+        base.trainable = not freeze_backbone
         x = base(inputs, training=True)
 
     elif backbone == "mobilenetv3large":
         from tensorflow.keras.applications import MobileNetV3Large
         base = MobileNetV3Large(include_top=False, weights=weights, minimalistic=False)
-        base.trainable = False
+        base.trainable = not freeze_backbone
         x = base(inputs, training=True)
 
     elif backbone == "resnet50":
         from tensorflow.keras.applications import ResNet50
         base = ResNet50(include_top=False, weights=weights)
-        base.trainable = False
+        base.trainable = not freeze_backbone
         x = base(inputs, training=True)
 
     elif backbone == "convnexttiny":
         from tensorflow.keras.applications import ConvNeXtTiny
         base = ConvNeXtTiny(include_top=False, weights=weights)
-        base.trainable = False
+        base.trainable = not freeze_backbone
         x = base(inputs, training=True)
 
     else:
         raise ValueError(f"Unknown backbone: {backbone!r}")
 
-    outputs = _build_head(x, head_units=head_units, head_dropout=head_dropout)
+    outputs = _build_head(x, head_units=head_units, head_dropout=head_dropout, head_style=head_style)
     model = keras.Model(inputs, outputs, name=f"{backbone}_pcam")
     return _compile(model, learning_rate)
 

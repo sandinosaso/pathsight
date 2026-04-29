@@ -144,6 +144,38 @@ class TrainConfig:
     String keys mapped to ``keras.metrics.*`` objects in that function;
     add a key here and it propagates to all runs without further code changes."""
 
+    # ── ReduceLROnPlateau ────────────────────────────────────────────────────
+    reduce_lr_monitor: str = field(default_factory=lambda: _env("PCAM_REDUCE_LR_MONITOR", "val_pr_auc"))
+    """Metric watched by ReduceLROnPlateau.  Defaults to ``val_pr_auc`` — the
+    same signal used by EarlyStopping — so both callbacks respond to the same
+    clinical objective (maximise recall-end of PR curve).  Monitoring val_loss
+    is cheaper to compute but can plateau while PR-AUC is still improving."""
+
+    reduce_lr_factor: float = field(default_factory=lambda: _env_float("PCAM_REDUCE_LR_FACTOR", 0.5))
+    """Multiplicative factor applied to the learning rate on plateau.
+    0.5 (halving) is large enough to escape a plateau without blowing up
+    Adam's momentum estimates.  More aggressive values (0.2) risk destabilising
+    the optimizer state accumulated over earlier epochs."""
+
+    reduce_lr_patience: int = field(default_factory=lambda: _env_int("PCAM_REDUCE_LR_PATIENCE", 3))
+    """Epochs without val-monitor improvement before reducing LR.
+    Intentionally shorter than ``early_stopping_patience`` (5) so the
+    scheduler fires at least once before early-stopping terminates the run:
+    reduce LR → one recovery epoch → re-evaluate → stop if still stalled.
+    This matters for recall: a lower LR often unlocks a few more true-positives
+    that were being missed at a higher step size."""
+
+    reduce_lr_min_lr: float = field(default_factory=lambda: _env_float("PCAM_REDUCE_LR_MIN_LR", 1e-7))
+    """Hard floor for the learning rate.  Below ~1e-7 Adam's effective update
+    is dominated by numerical noise; continuing to reduce serves no purpose
+    and wastes epochs that could trigger early-stopping."""
+
+    reduce_lr_cooldown: int = field(default_factory=lambda: _env_int("PCAM_REDUCE_LR_COOLDOWN", 1))
+    """Epochs the scheduler waits after a reduction before monitoring again.
+    1 epoch of cooldown lets momentum (Adam's m/v estimates) re-stabilise at
+    the new LR before the scheduler judges whether another reduction is needed,
+    preventing two immediate consecutive reductions."""
+
 
 
 @dataclass

@@ -85,7 +85,7 @@ Once running, Swagger UI is at `http://localhost:<APP_PORT>/docs`.
 }
 ```
 
-`model_summary` is the full `best.json` sidecar loaded at startup. Use it in
+`model_summary` is the full `<run_id>_best.json` sidecar loaded at startup. Use it in
 the frontend to display training metrics, the decision threshold, and timing
 info alongside a prediction.
 
@@ -105,7 +105,7 @@ Keras load begins.
 4. Derives `preprocess_mode` from the backbone name
 5. Returns a `LoadedModel` dataclass containing the Keras model + all metadata
 
-The sidecar file is the `best.json` produced by the benchmark runner (see below).
+The sidecar file is the `<run_id>_best.json` produced by the benchmark runner (see below).
 
 ---
 
@@ -202,7 +202,7 @@ disable it. Supported fields:
 
 ### Decision threshold
 
-All test metrics in `summary.json` / `best.json` are computed at
+All test metrics in `summary.json` / `<run_id>_best.json` are computed at
 `best_f1_threshold` — the threshold that maximises F1 on the test set, derived
 from the precision-recall curve (typically 0.2–0.4). This is lower than the
 naive 0.5 and gives substantially higher recall (fewer missed cancers). The
@@ -216,13 +216,13 @@ After a run, all outputs land in `artifacts/benchmarks/<run_id>/`:
 
 | File | Description |
 |---|---|
-| `best.keras` | Best Stage 2 checkpoint (saved by `ModelCheckpoint` on `val_auc`) |
-| `stage1_best.keras` | Best Stage 1 checkpoint (head-only) |
+| `<run_id>_best.keras` | Best Stage 2 checkpoint (saved by `ModelCheckpoint`) |
+| `<run_id>_stage1_best.keras` | Best Stage 1 checkpoint (head-only) |
 | `stage1_history.json` / `stage1.csv` | Per-epoch metrics for Stage 1 |
 | `stage2_history.json` / `stage2.csv` | Per-epoch metrics for Stage 2 |
 | `test_predictions.npz` | Raw `y_true` / `y_prob` arrays for offline analysis |
 | `summary.json` | Full run summary — metrics, thresholds, timing, config |
-| `best.json` | **Identical to `summary.json`** — the GCS sidecar uploaded with the model |
+| `<run_id>_best.json` | **Identical to `summary.json`** — GCS sidecar uploaded with the model |
 | `confusion_matrix.png` | Confusion matrix at `best_f1_threshold` |
 | `roc.png` | ROC curve with AUC |
 | `pr_curve.png` | Precision-Recall curve with the operating point marked |
@@ -238,22 +238,29 @@ Only two files are needed to serve the model from the backend:
 | `best.keras` | `gs://<bucket>/best_model.keras` |
 | `best.json` | `gs://<bucket>/best_model.json` |
 
-**Upload via CLI:**
+**Upload via `make upload-model` (recommended):**
+
+```bash
+make upload-model MODEL_PATH=artifacts/benchmarks/resnet50_96/resnet50_96_best.keras
+# The matching .json is detected automatically from the same path stem.
+```
+
+**Upload via raw `gcloud` CLI:**
 
 ```bash
 BUCKET=pathsight-models-wagon-bootcamp-489111
 RUN_ID=resnet50_96
 
-gcloud storage cp artifacts/benchmarks/${RUN_ID}/best.keras gs://${BUCKET}/best_model.keras
-gcloud storage cp artifacts/benchmarks/${RUN_ID}/best.json  gs://${BUCKET}/best_model.json
+gcloud storage cp artifacts/benchmarks/${RUN_ID}/${RUN_ID}_best.keras gs://${BUCKET}/best_model.keras
+gcloud storage cp artifacts/benchmarks/${RUN_ID}/${RUN_ID}_best.json  gs://${BUCKET}/best_model.json
 ```
 
 **Upload via Google Cloud Console:**
 
 1. Go to [console.cloud.google.com/storage](https://console.cloud.google.com/storage)
 2. Open your bucket (`pathsight-models-wagon-bootcamp-489111`)
-3. Upload `best.keras` → rename to `best_model.keras`
-4. Upload `best.json` → rename to `best_model.json`
+3. Upload `<run_id>_best.keras` → rename to `best_model.keras`
+4. Upload `<run_id>_best.json` → rename to `best_model.json`
 
 The next CI/CD run (`deploy.yml`) will pull the new files and bake them into
 the Docker image automatically.

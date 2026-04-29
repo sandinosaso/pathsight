@@ -52,14 +52,18 @@ def default_callbacks(
     monitor: str | None = None,
     mode: str | None = None,
 ) -> list[keras.callbacks.Callback]:
-    """Return the default EarlyStopping + ModelCheckpoint + CSVLogger callbacks.
+    """Return the default callback stack for a training run.
 
-    When any of ``monitor``, ``mode``, or ``early_stopping_patience`` is
-    ``None`` (the default) the value is read from
-    :class:`ModelServiceConfig`'s ``TrainConfig`` — itself driven by the
-    ``PCAM_EARLY_STOP_MONITOR`` / ``PCAM_EARLY_STOP_MODE`` /
-    ``PCAM_EARLY_STOPPING_PATIENCE`` env vars.  Callers may still override
-    a specific value per-call if needed.
+    Callbacks included:
+    - ``ReduceLROnPlateau`` — fires *before* early stopping (shorter patience)
+      to give the optimizer one last chance at a lower step size.
+    - ``EarlyStopping`` — terminates training when the monitor has not improved
+      for ``patience`` epochs; restores best weights automatically.
+    - ``ModelCheckpoint`` — saves the best checkpoint to ``checkpoint_path``.
+    - ``CSVLogger`` — appends per-epoch metrics to ``csv_log_path``.
+
+    All tunable knobs default to :class:`ModelServiceConfig` values (driven by
+    env vars) so experiments can change them without touching source code.
     """
     cfg = ModelServiceConfig().train
     if monitor is None:
@@ -69,7 +73,20 @@ def default_callbacks(
     if early_stopping_patience is None:
         early_stopping_patience = cfg.early_stopping_patience
 
+    # ReduceLROnPlateau fires first (patience < early_stopping_patience) so the
+    # optimizer gets at least one LR reduction before training is terminated.
+    # Using the same monitor as EarlyStopping keeps both callbacks responding to
+    # the same clinical signal (val_pr_auc by default).
     cbs: list[keras.callbacks.Callback] = [
+        keras.callbacks.ReduceLROnPlateau(
+            monitor=cfg.reduce_lr_monitor,
+            factor=cfg.reduce_lr_factor,
+            patience=cfg.reduce_lr_patience,
+            min_lr=cfg.reduce_lr_min_lr,
+            cooldown=cfg.reduce_lr_cooldown,
+            mode=mode,
+            verbose=1,
+        ),
         keras.callbacks.EarlyStopping(
             monitor=monitor,
             patience=early_stopping_patience,

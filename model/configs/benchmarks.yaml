@@ -116,38 +116,191 @@
 #   - Tellez 2019 H&E augmentation recipe (DataConfig.aug_*)
 # Goal: push high_recall_95 above 0 by giving Stage 2 more data + more
 # capacity (40 unfrozen layers instead of 24) and more time.
-- run_id: efficientnetb0_96
+# - run_id: efficientnetb0_96
+#   backbone: efficientnetb0
+#   image_size: 96
+#   stage1_epochs: 15
+#   stage2_epochs: 12
+#   fine_tune_layers: 40           # was 24 — more backbone capacity to adapt
+#   batch_size: 32
+#   head_units: 128
+#   head_dropout: 0.4
+#   max_train_samples: 50000       # was 25000 — Stage 1 head sees more variety
+#   stage2_train_samples: 100000   # was 50000 — biggest single recall lift
+
+# - run_id: efficientnetb0_128
+#   backbone: efficientnetb0
+#   image_size: 128
+#   stage1_epochs: 15
+#   stage2_epochs: 12
+#   fine_tune_layers: 40
+#   batch_size: 32
+#   head_units: 128
+#   head_dropout: 0.4
+#   max_train_samples: 50000
+#   stage2_train_samples: 100000
+
+# - run_id: efficientnetb0_224
+#   backbone: efficientnetb0
+#   image_size: 224
+#   stage1_epochs: 15
+#   stage2_epochs: 12
+#   fine_tune_layers: 40
+#   batch_size: 16                 # was 32 — large images need smaller batch on limited RAM
+#   head_units: 128
+#   head_dropout: 0.4
+#   max_train_samples: 50000
+#   stage2_train_samples: 100000
+
+# ── EfficientNetV2B0 — Shayan-notebook reproduction ─────────────────────────
+# Best-effort YAML simulation of:
+#   notebooks/shayanghavami_06_EfficientNetV2B0_model_training.ipynb
+#
+# What this config matches:
+#   backbone=EfficientNetV2B0, image_size=96, batch_size=32,
+#   Adam(lr=1e-4), 10 epochs (single stage), 25 000 train samples,
+#   head_dropout=0.3 (notebook value).
+#
+# What is now matched via YAML knobs (previously required code changes):
+#   - head_style=minimal: GAP → BN → Dropout → Dense(1); matches notebook head exactly.
+#   - freeze_backbone=false: backbone trainable from epoch 1; matches notebook's
+#     base_model.trainable=True approach (end-to-end single-stage training).
+#
+# Remaining residual differences (low impact):
+#   - ReduceLROnPlateau: runner monitors val_pr_auc (patience=3, cooldown=1);
+#     notebook monitors val_loss (patience=2, cooldown=0) — functionally similar.
+#   - Threshold: runner reports at best_f1_threshold; notebook reports at 0.5/0.3.
+#
+# Before running, set these in .env:
+#   PCAM_AUGMENT_TRAIN=False        # notebook has zero augmentation
+#   PCAM_EARLY_STOP_MONITOR=val_auc # notebook monitors val_auc, not val_pr_auc
+#
+# Run with:
+#   python model/scripts/run_benchmark.py \
+#     --config model/configs/benchmarks.yaml \
+#     --only efficientnetb0_96_shayanghavami
+# - run_id: efficientnetb0_96_15epochs_50k_samples_shayanghavami
+#   backbone: efficientnetb0
+#   image_size: 96
+#   stage1_epochs: 15               # notebook configured 10 (run was interrupted at epoch 4)
+#   stage2_epochs: 0                # disable stage 2 — notebook is single-stage end-to-end
+#   fine_tune_layers: 0             # irrelevant when stage2_epochs=0; explicit for clarity
+#   batch_size: 32
+#   head_style: minimal             # GAP → BN → Dropout → Dense(1); matches notebook head
+#   head_dropout: 0.3               # notebook value (our tuned default is 0.4)
+#   freeze_backbone: false          # notebook sets base_model.trainable=True from the start
+#   learning_rate: 1.0e-4           # notebook's only LR (our default is 1e-3)
+#   fine_tune_lr: 1.0e-4            # not used (stage 2 disabled); kept explicit for safety
+#   max_train_samples: 50000        # notebook take(25000)
+
+# - run_id: efficientnetb0_96_15_epochs_100k_samples_shayanghavami
+#   backbone: efficientnetb0
+#   image_size: 96
+#   stage1_epochs: 15               # notebook configured 10 (run was interrupted at epoch 4)
+#   stage2_epochs: 0                # disable stage 2 — notebook is single-stage end-to-end
+#   fine_tune_layers: 0             # irrelevant when stage2_epochs=0; explicit for clarity
+#   batch_size: 32
+#   head_style: minimal             # GAP → BN → Dropout → Dense(1); matches notebook head
+#   head_dropout: 0.3               # notebook value (our tuned default is 0.4)
+#   freeze_backbone: false          # notebook sets base_model.trainable=True from the start
+#   learning_rate: 1.0e-4           # notebook's only LR (our default is 1e-3)
+#   fine_tune_lr: 1.0e-4            # not used (stage 2 disabled); kept explicit for safety
+#   max_train_samples: 100000       # notebook take(25000)
+
+
+
+# - run_id: efficientnetb0_96_15_epochs_100k_samples_stage2_head40_layers_shayanghavami
+#   backbone: efficientnetb0
+#   image_size: 96
+#   stage1_epochs: 15               # notebook configured 10 (run was interrupted at epoch 4)
+#   stage2_epochs: 12               # disable stage 2 — notebook is single-stage end-to-end
+#   fine_tune_layers: 40            # irrelevant when stage2_epochs=0; explicit for clarity
+#   batch_size: 32
+#   head_style: default             # GAP → Dense(40, relu) → Dropout → Dense(1); matches notebook head
+#   head_dropout: 0.2               # notebook value (our tuned default is 0.4)
+#   freeze_backbone: false          # notebook sets base_model.trainable=True from the start
+#   learning_rate: 1.0e-4           # notebook's only LR (our default is 1e-3)
+#   fine_tune_lr: 1.0e-4            # not used (stage 2 disabled); kept explicit for safety
+#   max_train_samples: 50000        # notebook take(25000)
+#   stage2_train_samples: 100000
+
+
+# - run_id: efficientnetb0_96_15_epochs_100k_samples_stage2_head40_layers_shayanghavami_more_dropout
+#   backbone: efficientnetb0
+#   image_size: 96
+#   stage1_epochs: 15               # notebook configured 10 (run was interrupted at epoch 4)
+#   stage2_epochs: 12               # disable stage 2 — notebook is single-stage end-to-end
+#   fine_tune_layers: 40            # irrelevant when stage2_epochs=0; explicit for clarity
+#   batch_size: 32
+#   head_style: default             # GAP → BN → Dropout → Dense(1); matches notebook head
+#   head_dropout: 0.4               # notebook value (our tuned default is 0.4)
+#   freeze_backbone: false          # notebook sets base_model.trainable=True from the start
+#   learning_rate: 1.0e-3           # notebook's only LR (our default is 1e-3)
+#   fine_tune_lr: 1.0e-4            # not used (stage 2 disabled); kept explicit for safety
+#   max_train_samples: 50000        # notebook take(25000)
+#   stage2_train_samples: 100000
+
+
+# ── ResNet50 ────────────────────────────────────────────────────────────────
+# - run_id: resnet50_96
+#   backbone: resnet50
+#   image_size: 96
+#   stage1_epochs: 15
+#   stage2_epochs: 12
+#   fine_tune_layers: 30
+#   batch_size: 32
+#   max_train_samples: 50000       # Stage 1 (frozen backbone): fast, head saturates here.
+#   stage2_train_samples: 100000    # Stage 2 (fine-tune 24 layers): broader distribution.
+
+# - run_id: mobilenetv3small_96
+#   backbone: mobilenetv3small
+#   image_size: 96
+#   stage1_epochs: 15
+#   stage2_epochs: 12
+#   fine_tune_layers: 30
+#   batch_size: 32
+#   max_train_samples: 50000       # Stage 1 (frozen backbone): fast, head saturates here.
+#   stage2_train_samples: 100000    # Stage 2 (fine-tune 24 layers): broader distribution.
+
+
+- run_id: efficientnetb0_96_4
   backbone: efficientnetb0
   image_size: 96
-  stage1_epochs: 15
-  stage2_epochs: 12
-  fine_tune_layers: 40           # was 24 — more backbone capacity to adapt
+  stage1_epochs: 15               # notebook configured 10 (run was interrupted at epoch 4)
+  stage2_epochs: 0                # disable stage 2 — notebook is single-stage end-to-end
+  fine_tune_layers: 0             # irrelevant when stage2_epochs=0; explicit for clarity
   batch_size: 32
-  head_units: 128
-  head_dropout: 0.4
-  max_train_samples: 50000       # was 25000 — Stage 1 head sees more variety
-  stage2_train_samples: 100000   # was 50000 — biggest single recall lift
+  head_style: default             # GAP → BN → Dropout → Dense(1); matches notebook head
+  head_dropout: 0.3               # notebook value (our tuned default is 0.4)
+  freeze_backbone: false          # notebook sets base_model.trainable=True from the start
+  learning_rate: 1.0e-4           # notebook's only LR (our default is 1e-3)
+  fine_tune_lr: 1.0e-4            # not used (stage 2 disabled); kept explicit for safety
+  max_train_samples: 100000       # notebook take(25000)
 
-- run_id: efficientnetb0_128
+- run_id: efficientnetb0_96_5
   backbone: efficientnetb0
-  image_size: 128
-  stage1_epochs: 15
-  stage2_epochs: 12
-  fine_tune_layers: 40
+  image_size: 96
+  stage1_epochs: 15               # notebook configured 10 (run was interrupted at epoch 4)
+  stage2_epochs: 0                # disable stage 2 — notebook is single-stage end-to-end
+  fine_tune_layers: 0             # irrelevant when stage2_epochs=0; explicit for clarity
   batch_size: 32
-  head_units: 128
-  head_dropout: 0.4
-  max_train_samples: 50000
-  stage2_train_samples: 100000
+  head_style: default             # GAP → BN → Dropout → Dense(1); matches notebook head
+  head_dropout: 0.4               # notebook value (our tuned default is 0.4)
+  freeze_backbone: false          # notebook sets base_model.trainable=True from the start
+  learning_rate: 1.0e-3           # notebook's only LR (our default is 1e-3)
+  fine_tune_lr: 1.0e-4            # not used (stage 2 disabled); kept explicit for safety
+  max_train_samples: 100000       # notebook take(25000)
 
-- run_id: efficientnetb0_224
+- run_id: efficientnetb0_96_6
   backbone: efficientnetb0
-  image_size: 224
-  stage1_epochs: 15
-  stage2_epochs: 12
-  fine_tune_layers: 40
-  batch_size: 16                 # was 32 — large images need smaller batch on limited RAM
-  head_units: 128
-  head_dropout: 0.4
-  max_train_samples: 50000
-  stage2_train_samples: 100000
+  image_size: 96
+  stage1_epochs: 20               # notebook configured 10 (run was interrupted at epoch 4)
+  stage2_epochs: 0                # disable stage 2 — notebook is single-stage end-to-end
+  fine_tune_layers: 0             # irrelevant when stage2_epochs=0; explicit for clarity
+  batch_size: 32
+  head_style: minimal             # GAP → BN → Dropout → Dense(1); matches notebook head
+  head_dropout: 0.3               # notebook value (our tuned default is 0.4)
+  freeze_backbone: false          # notebook sets base_model.trainable=True from the start
+  learning_rate: 1.0e-4           # notebook's only LR (our default is 1e-3)
+  fine_tune_lr: 1.0e-4            # not used (stage 2 disabled); kept explicit for safety
+  max_train_samples: 150000       # notebook take(25000)
