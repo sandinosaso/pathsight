@@ -79,10 +79,14 @@ docker-up: docker-build-local docker-run-local
 # whatever is there.  The bucket always stores the files as best_model.keras /
 # best_model.json so the CI/CD deploy job picks them up automatically.
 #
-# Usage (MODEL_PATH is required):
-#   make upload-model MODEL_PATH=artifacts/benchmarks/efficientnetb0_224/best_model.keras
+# Benchmark runs produce files named after the run_id, e.g.:
+#   artifacts/benchmarks/efficientnetb0_128/efficientnetb0_128_best.keras
+#   artifacts/benchmarks/efficientnetb0_128/efficientnetb0_128_best.json
 #
-# The matching .json is derived automatically (same dir, same stem).
+# Usage (MODEL_PATH is required):
+#   make upload-model MODEL_PATH=artifacts/benchmarks/efficientnetb0_128/efficientnetb0_128_best.keras
+#
+# The matching .json sidecar is derived automatically (same dir, same stem).
 # MODEL_BUCKET_NAME is read from .env or can be overridden on the command line.
 
 MODEL_BUCKET_NAME ?= $(error MODEL_BUCKET_NAME is not set — add it to .env or pass it on the command line)
@@ -90,7 +94,7 @@ MODEL_BUCKET_NAME ?= $(error MODEL_BUCKET_NAME is not set — add it to .env or 
 .PHONY: upload-model
 upload-model:
 ifndef MODEL_PATH
-	$(error MODEL_PATH is required — e.g. make upload-model MODEL_PATH=artifacts/benchmarks/efficientnetb0_224/best_model.keras)
+	$(error MODEL_PATH is required — e.g. make upload-model MODEL_PATH=artifacts/benchmarks/efficientnetb0_128/efficientnetb0_128_best.keras)
 endif
 	@MODEL_JSON="$$(dirname $(MODEL_PATH))/$$(basename $(MODEL_PATH) .keras).json"; \
 	if [ ! -f "$(MODEL_PATH)" ]; then echo "ERROR: model file not found: $(MODEL_PATH)"; exit 1; fi; \

@@ -127,8 +127,9 @@ python backend/scripts/download_model.py
 
 ```bash
 # After a benchmark run completes, copy its outputs to the models folder
-cp artifacts/benchmarks/<run_id>/best.keras artifacts/models/best_model.keras
-cp artifacts/benchmarks/<run_id>/best.json  artifacts/models/best_model.json
+# Files are named after the run_id (e.g. efficientnetb0_128_best.keras)
+cp artifacts/benchmarks/<run_id>/<run_id>_best.keras artifacts/models/best_model.keras
+cp artifacts/benchmarks/<run_id>/<run_id>_best.json  artifacts/models/best_model.json
 ```
 
 ### 3. Start the backend
@@ -165,8 +166,8 @@ python model/scripts/run_benchmark.py \
   --only resnet50_96
 
 # When it finishes, promote the result to the active model
-cp artifacts/benchmarks/resnet50_96/best.keras artifacts/models/best_model.keras
-cp artifacts/benchmarks/resnet50_96/best.json  artifacts/models/best_model.json
+cp artifacts/benchmarks/resnet50_96/resnet50_96_best.keras artifacts/models/best_model.keras
+cp artifacts/benchmarks/resnet50_96/resnet50_96_best.json  artifacts/models/best_model.json
 ```
 
 ---

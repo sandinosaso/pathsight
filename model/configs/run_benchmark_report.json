@@ -1,29 +1,21 @@
 {
   "results": [
     {
-      "run_id": "efficientnetb0_96",
+      "run_id": "resnet50_96",
       "status": "success",
-      "elapsed_s": 1006.4,
-      "max_train_samples": 25000,
-      "test_auc": 0.90015,
-      "test_recall": 0.87173
+      "elapsed_s": 1497.7,
+      "max_train_samples": 50000,
+      "test_auc": 0.91891,
+      "test_recall": 0.88008
     },
     {
-      "run_id": "efficientnetb0_128",
+      "run_id": "mobilenetv3small_96",
       "status": "success",
-      "elapsed_s": 1178.4,
-      "max_train_samples": 25000,
-      "test_auc": 0.90778,
-      "test_recall": 0.87134
-    },
-    {
-      "run_id": "efficientnetb0_224",
-      "status": "success",
-      "elapsed_s": 2145.5,
-      "max_train_samples": 25000,
-      "test_auc": 0.92057,
-      "test_recall": 0.88019
+      "elapsed_s": 2159.3,
+      "max_train_samples": 50000,
+      "test_auc": 0.89753,
+      "test_recall": 0.85459
     }
   ],
-  "elapsed_s": 4330.2
+  "elapsed_s": 3657.0
 }

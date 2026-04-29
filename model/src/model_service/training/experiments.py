@@ -97,6 +97,27 @@ class RunConfig:
     over-confident predictions on majority patterns."""
     head_units: int = 128
 
+    # Head / backbone architecture knobs
+    head_style: str = "default"
+    """Classification head variant.
+
+    ``"default"`` — GAP → Dense(head_units, relu) → Dropout → sigmoid.
+    ``"minimal"`` — GAP → BatchNormalization → Dropout → sigmoid (no hidden Dense).
+    The ``"minimal"`` style matches the Shayan-notebook recipe and has fewer
+    parameters, which helps when training on small datasets without augmentation.
+    """
+    freeze_backbone: bool = True
+    """Whether to freeze the backbone at construction time.
+
+    ``True`` (default) — two-stage approach: head-only stage 1, then
+    ``unfreeze_top`` for stage 2.
+    ``False`` — all backbone weights are trainable from epoch 1 (single-stage,
+    end-to-end fine-tuning; matches the Shayan-notebook recipe).
+    When ``False``, stage 2 is still run if ``stage2_epochs > 0`` — the
+    ``unfreeze_top`` call in stage 2 becomes a no-op because all layers are
+    already trainable, but the separate dataset and LR change still apply.
+    """
+
     # Data
     augment_train: bool = True
     stain_normalise: bool = False
@@ -270,6 +291,8 @@ def run_benchmark(cfg: RunConfig, *, data_dir: str | None = None, download: bool
             learning_rate=cfg.learning_rate,
             head_dropout=cfg.head_dropout,
             head_units=cfg.head_units,
+            head_style=cfg.head_style,
+            freeze_backbone=cfg.freeze_backbone,
         )
     model.summary(print_fn=lambda s: print(s))
 
@@ -279,7 +302,7 @@ def run_benchmark(cfg: RunConfig, *, data_dir: str | None = None, download: bool
     # ── 4. Stage 1 — frozen backbone ──────────────────────────────────────
     timer1 = EpochTimer()
     cbs1 = default_callbacks(
-        out_dir / "stage1_best.keras",
+        out_dir / f"{cfg.run_id}_stage1_best.keras",
         out_dir / "stage1.csv",
     ) + [timer1]
 
@@ -293,7 +316,7 @@ def run_benchmark(cfg: RunConfig, *, data_dir: str | None = None, download: bool
 
     timer2 = EpochTimer()
     cbs2 = default_callbacks(
-        out_dir / "best.keras",
+        out_dir / f"{cfg.run_id}_best.keras",
         out_dir / "stage2.csv",
     ) + [timer2]
 
@@ -378,13 +401,16 @@ def run_benchmark(cfg: RunConfig, *, data_dir: str | None = None, download: bool
             "stage2_train_samples": cfg.stage2_train_samples,
         },
     }
+    # summary.json — human-readable record always at a fixed name inside out_dir.
     save_json(out_dir / "summary.json", summary)
-    # best.json is the GCS sidecar uploaded alongside best.keras.
-    # It carries the full summary so the backend and frontend can use any
-    # field (backbone, image_size, thresholds, test metrics, timing, etc.)
-    # without any further API calls or hardcoded values.
-    save_json(out_dir / "best.json", summary)
-    print(f"\nSummary saved to {out_dir / 'summary.json'} and {out_dir / 'best.json'}")
+    # {run_id}_best.json — GCS sidecar that must be uploaded alongside
+    # {run_id}_best.keras.  Naming it after the run_id prevents accidental
+    # overwrites when multiple experiments share the same artifact directory,
+    # and lets the backend resolve the sidecar from the model path alone
+    # (os.path.splitext(model_path)[0] + ".json").
+    best_json_path = out_dir / f"{cfg.run_id}_best.json"
+    save_json(best_json_path, summary)
+    print(f"\nSummary saved to {out_dir / 'summary.json'} and {best_json_path}")
     print(
         f"  AUC={test_metrics.get('roc_auc', 0):.4f}"
         f"  PR-AUC={test_metrics.get('pr_auc', 0):.4f}"

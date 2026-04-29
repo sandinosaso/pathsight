@@ -79,8 +79,11 @@ function MetricTable({ title, rows, colorFn }: {
             const color = colorFn?.(label, isNaN(raw) ? null : raw) ?? "";
             return (
               <tr key={label} className="border-b border-slate-800 last:border-0">
-                <td className="py-1.5 pr-4 text-slate-400">{label}</td>
-                <td className={cn("py-1.5 text-right font-mono font-medium tabular-nums", color || "text-slate-200")}>
+                <td className="py-1.5 pr-4 text-slate-400 whitespace-nowrap">{label}</td>
+                <td
+                  className={cn("py-1.5 text-right font-mono font-medium tabular-nums max-w-[160px] truncate", color || "text-slate-200")}
+                  title={value}
+                >
                   {value}
                 </td>
               </tr>

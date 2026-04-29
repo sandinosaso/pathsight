@@ -49,30 +49,14 @@ def _preprocess_image(
     return image, label
 
 
-def _balanced_subset(ds: tf.data.Dataset, n_total: int, seed: int = 42) -> tf.data.Dataset:
-    """Return a random balanced subset of *n_total* samples.
+def _random_subset(ds: tf.data.Dataset, n_total: int, seed: int = 42) -> tf.data.Dataset:
+    """Return a random subset of *n_total* samples.
 
-    Uses :func:`tf.data.Dataset.rejection_resample` (a built-in tf.data op) to
-    enforce a 50/50 class split, then shuffles and limits to ``n_total``.
-    PCam labels are integer scalars (0 = normal, 1 = metastatic).
-
-    A large upstream shuffle ensures the resampler draws from the full
-    distribution rather than a consecutive slice of the TFRecord shards.
+    PCam's official splits are already ~50/50 balanced, so no resampling is
+    needed.  A plain shuffle + take is sufficient and avoids the OOM risk and
+    ``rejection_resample`` overhead.
     """
-    # Buffer size: hold exactly n_total items so rejection_resample sees the
-    # full subset distribution, but cap at 50 000 to avoid OOM on machines
-    # with limited RAM (262 144 × 27 KB ≈ 7 GB — way too much for a shuffle).
-    # For the small subsets used here (20k–50k) this gives a perfect shuffle
-    # because the entire subset fits in the buffer.
-    ds = ds.shuffle(buffer_size=min(n_total, 50_000), seed=seed)
-    ds = ds.rejection_resample(
-        class_func=lambda _x, y: tf.cast(y, tf.int32),
-        target_dist=[0.5, 0.5],
-        seed=seed,
-    )
-    # rejection_resample wraps each element as (class_id, original_element)
-    ds = ds.map(lambda _class_id, xy: xy)
-    return ds.take(n_total)
+    return ds.shuffle(buffer_size=min(n_total, 50_000), seed=seed).take(n_total)
 
 
 def build_pcam_datasets(
@@ -99,10 +83,11 @@ def build_pcam_datasets(
     download:
         Whether to download the dataset if not present.
     max_train_samples:
-        If set, limit training to this many samples using a balanced random
-        subset (50/50 per class).  Val and test are scaled proportionally
-        at 1/5 of ``max_train_samples`` each.  Pass ``None`` to use the full
-        dataset (~262 k train / 32 k val / 32 k test).
+        If set, limit training to this many randomly sampled examples.
+        PCam is already ~50/50 balanced so no resampling is applied.
+        Val and test are scaled proportionally at 1/5 of ``max_train_samples``
+        each.  Pass ``None`` to use the full dataset
+        (~262 k train / 32 k val / 32 k test).
     """
     from model_service.training.backbones import preprocess_mode as _mode_for
 
@@ -129,9 +114,9 @@ def build_pcam_datasets(
 
     if max_train_samples is not None:
         n_eval = max(max_train_samples // 5, 128)
-        train_raw = _balanced_subset(train_raw, max_train_samples, seed=dc.seed)
-        val_raw = _balanced_subset(val_raw, n_eval, seed=dc.seed + 1)
-        test_raw = _balanced_subset(test_raw, n_eval, seed=dc.seed + 2)
+        train_raw = _random_subset(train_raw, max_train_samples, seed=dc.seed)
+        val_raw = _random_subset(val_raw, n_eval, seed=dc.seed + 1)
+        test_raw = _random_subset(test_raw, n_eval, seed=dc.seed + 2)
 
     def map_train(x, y):
         return _preprocess_image(
