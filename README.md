@@ -9,6 +9,14 @@ labelled images from the Camelyon16 sentinel-lymph-node challenge).
 A user uploads a patch image → the backend runs inference → the frontend
 displays the predicted label, confidence score, and full model metrics.
 
+---
+ 
+## Presentation
+ 
+📊 [View Project Presentation](https://docs.google.com/presentation/d/1-_Y20zA1YZdxxyWPSzF0tJuOg4pkxX0_gHba0JrX7Ec/edit?usp=sharing)
+ 
+---
+
 ## Contributors
  
 | Avatar | Name | GitHub |
